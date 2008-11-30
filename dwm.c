@@ -1111,6 +1111,10 @@ resize(Client *c, int x, int y, int w, int h, Bool sizehints) {
 		c->w = wc.width = w;
 		c->h = wc.height = h;
 		wc.border_width = c->bw;
+
+        // Smart borders (not there when one client takes up the entire screen)
+        if(c->w > 1900 && c->h > 1180) wc.border_width = 0;
+
 		XConfigureWindow(dpy, c->win,
 				CWX|CWY|CWWidth|CWHeight|CWBorderWidth, &wc);
 		configure(c);
