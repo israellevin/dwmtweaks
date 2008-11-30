@@ -9,7 +9,7 @@ static const char selbordercolor[]  = "#00ff00";
 static const char selbgcolor[]      = "#000000";
 static const char selfgcolor[]      = "#00ff00";
 static unsigned int borderpx        = 1;        /* border pixel of windows */
-static unsigned int snap            = 32;       /* snap pixel */
+static unsigned int snap            = 64;       /* snap pixel */
 static Bool showbar                 = True;     /* False means no bar */
 static Bool topbar                  = True;     /* False means bottom bar */
 static Bool readin                  = True;     /* False means do not read stdin */
@@ -25,7 +25,7 @@ static Rule rules[] = {
 
 /* layout(s) */
 static float mfact      = 0.66; /* factor of master area size [0.05..0.95] */
-static Bool resizehints = True; /* False means respect size hints in tiled resizals */
+static Bool resizehints = False; /* False means respect size hints in tiled resizals */
 
 #include "tv.c"
 #include "gaplessgrid.c"
@@ -69,7 +69,7 @@ static Key keys[] = {
 	{ MODKEY,                       XK_Return, zoom,           {0} },
 	{ MODKEY,                       XK_Tab,    view,           {0} },
 	{ MODKEY,	                    XK_c,      killclient,     {0} },
-	{ MODKEY,                       XK_Right,  tv,             {} },
+	{ MODKEY,                       XK_Right,  tv,             {0} },
 	{ MODKEY,                       XK_t,      setlayout,      {.v = &layouts[0]} },
 	{ MODKEY,                       XK_f,      setlayout,      {.v = &layouts[1]} },
 	{ MODKEY,                       XK_m,      setlayout,      {.v = &layouts[2]} },
