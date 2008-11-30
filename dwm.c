@@ -1205,7 +1205,7 @@ run(void) {
 	sbuf[len] = stext[len] = '\0'; /* 0-terminator is never touched */
 	while(running) {
 		FD_ZERO(&rd);
-		if(readin)
+		if(readin && showbar)
 			FD_SET(STDIN_FILENO, &rd);
 		FD_SET(xfd, &rd);
 		if(select(xfd + 1, &rd, NULL, NULL, NULL) == -1) {
