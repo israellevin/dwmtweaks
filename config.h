@@ -30,7 +30,6 @@ static Bool resizehints = True; /* False means respect size hints in tiled resiz
 #include "gaplessgrid.c"
 #include "fibonacci.c"
 #include "bstack.c"
-#include "tv.c"
 static Layout layouts[] = {
 	/* symbol     arrange function */
 	{ "[]=",      tile },    /* first entry is default */
@@ -59,7 +58,6 @@ static const char *termcmd[]  = { "aterm", "-fn", "-*-terminus-*-*-*-*-32-*-*-*-
 
 static Key keys[] = {
 	/* modifier                     key        function        argument */
-	{ MODKEY,                       XK_a,      tv,             {} },
 	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
 	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
