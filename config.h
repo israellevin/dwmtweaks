@@ -29,6 +29,7 @@ static Bool resizehints = True; /* False means respect size hints in tiled resiz
 
 #include "gaplessgrid.c"
 #include "fibonacci.c"
+#include "bstack.c"
 static Layout layouts[] = {
 	/* symbol     arrange function */
 	{ "[]=",      tile },    /* first entry is default */
@@ -36,7 +37,8 @@ static Layout layouts[] = {
 	{ "[M]",      monocle },
 	{ "###",      gaplessgrid },
     { "[@]",      spiral },
-    { "[\\]",      dwindle },
+    { "[\\]",     dwindle },
+    { "TTT",      bstack },
 };
 
 /* key definitions */
@@ -71,7 +73,8 @@ static Key keys[] = {
 	{ MODKEY,                       XK_m,      setlayout,      {.v = &layouts[2]} },
 	{ MODKEY,                       XK_g,      setlayout,      {.v = &layouts[3]} },
 	{ MODKEY,                       XK_s,      setlayout,      {.v = &layouts[4]} },
-	{ MODKEY,                       XK_d,      setlayout,      {.v = &layouts[5]} },
+	{ MODKEY|ShiftMask,                       XK_s,      setlayout,      {.v = &layouts[5]} },
+	{ MODKEY,                       XK_d,      setlayout,      {.v = &layouts[6]} },
 	{ MODKEY,                       XK_space,  setlayout,      {0} },
 	{ MODKEY|ShiftMask,             XK_space,  togglefloating, {0} },
 	{ MODKEY,                       XK_0,      view,           {.ui = ~0 } },
