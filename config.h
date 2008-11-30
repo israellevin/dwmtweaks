@@ -1,13 +1,13 @@
 /* See LICENSE file for copyright and license details. */
 
 /* appearance */
-static const char font[]            = "-*-inconsolata-*-*-*-*-24-*-*-*-*-*-*-*";
+static const char font[]            = "-*-terminus-*-*-*-*-24-*-*-*-*-*-*-*";
 static const char normbordercolor[] = "#000000";
 static const char normbgcolor[]     = "#000000";
-static const char normfgcolor[]     = "#00ff00";
-static const char selbordercolor[]  = "#0066ff";
-static const char selbgcolor[]      = "#0066ff";
-static const char selfgcolor[]      = "#ffffff";
+static const char normfgcolor[]     = "#bbbbbb";
+static const char selbordercolor[]  = "#00ff00";
+static const char selbgcolor[]      = "#000000";
+static const char selfgcolor[]      = "#00ff00";
 static unsigned int borderpx        = 1;        /* border pixel of windows */
 static unsigned int snap            = 32;       /* snap pixel */
 static Bool showbar                 = True;     /* False means no bar */
@@ -20,12 +20,11 @@ static unsigned int tagset[] = {1, 1}; /* after start, first tag is selected */
 
 static Rule rules[] = {
 	/* class      instance    title       tags mask     isfloating */
-	{ "Gimp",     NULL,       NULL,       0,            True },
-	{ "Firefox",  NULL,       NULL,       1 << 8,       True },
+    { "stam",  NULL,       NULL,       1 << 8,       True },
 };
 
 /* layout(s) */
-static float mfact      = 0.65; /* factor of master area size [0.05..0.95] */
+static float mfact      = 0.66; /* factor of master area size [0.05..0.95] */
 static Bool resizehints = True; /* False means respect size hints in tiled resizals */
 
 #include "gaplessgrid.c"
@@ -49,8 +48,8 @@ static Layout layouts[] = {
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
 
 /* commands */
-static const char *dmenucmd[] = { "dmenu_run", "-fn", font, "-nb", normbgcolor, "-nf", normfgcolor, "-sb", selbgcolor, "-sf", selfgcolor, NULL };
-static const char *termcmd[]  = { "uxterm", NULL };
+static const char *dmenucmd[] = { "dmenu_run", "-b", "-fn", "-*-terminus-*-*-*-*-64-*-*-*-*-*-*-*", "-nb", "#ff0000", "-nf", "#000000", "-sb", selbgcolor, "-sf", selfgcolor, NULL };
+static const char *termcmd[]  = { "aterm", "-fn", "-*-terminus-*-*-*-*-32-*-*-*-*-*-*-*", "-fade", "70", "-fg", "grey", "-pixmap", "~/pictures/Wallpapers/raindark.jpg", "+sb", NULL };
 
 static Key keys[] = {
 	/* modifier                     key        function        argument */
@@ -63,10 +62,11 @@ static Key keys[] = {
 	{ MODKEY,                       XK_l,      setmfact,       {.f = +0.05} },
 	{ MODKEY,                       XK_Return, zoom,           {0} },
 	{ MODKEY,                       XK_Tab,    view,           {0} },
-	{ MODKEY|ShiftMask,             XK_c,      killclient,     {0} },
+	{ MODKEY,	                    XK_c,      killclient,     {0} },
 	{ MODKEY,                       XK_t,      setlayout,      {.v = &layouts[0]} },
 	{ MODKEY,                       XK_f,      setlayout,      {.v = &layouts[1]} },
 	{ MODKEY,                       XK_m,      setlayout,      {.v = &layouts[2]} },
+	{ MODKEY,                       XK_g,      setlayout,      {.v = &layouts[3]} },
 	{ MODKEY,                       XK_space,  setlayout,      {0} },
 	{ MODKEY|ShiftMask,             XK_space,  togglefloating, {0} },
 	{ MODKEY,                       XK_0,      view,           {.ui = ~0 } },
@@ -100,4 +100,3 @@ static Button buttons[] = {
 	{ ClkTagBar,            MODKEY,         Button1,        tag,            {0} },
 	{ ClkTagBar,            MODKEY,         Button3,        toggletag,      {0} },
 };
-

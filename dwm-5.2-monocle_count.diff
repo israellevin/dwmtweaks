@@ -1,0 +1,32 @@
+--- dwm-5.2/dwm.c	2008-09-09 21:46:17.000000000 +0200
++++ dwm-5.2-monocle_count/dwm.c	2008-10-13 00:04:38.000000000 +0200
+@@ -491,7 +491,8 @@
+ 
+ void
+ drawbar(void) {
+-	int x;
++	int x, a= 0, s= 0;
++	char posbuf[10];
+ 	unsigned int i, occ = 0, urg = 0;
+ 	unsigned long *col;
+ 	Client *c;
+@@ -517,6 +518,19 @@
+ 	}
+ 	else
+ 		x = dc.x;
++	if(lt[sellt]->arrange == monocle){
++	  dc.x= x;
++	  for(c= nexttiled(clients), a= 0, s= 0; c; c= nexttiled(c->next), a++)
++	    if(c == stack)
++	      s= a;
++	  if(!s && a)
++	    s= a;
++	  snprintf(posbuf, LENGTH(posbuf), "[%d/%d]", s, a);
++	  dc.w= TEXTW(posbuf);
++	  drawtext(posbuf, dc.norm, False);
++	  x= dc.x + dc.w;
++	}
++	 
+ 	dc.w = TEXTW(stext);
+ 	dc.x = ww - dc.w;
+ 	if(dc.x < x) {

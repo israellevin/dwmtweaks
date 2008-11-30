@@ -1,0 +1,59 @@
+diff -up dwm-5.2-original/config.def.h dwm-5.2-modified/config.def.h
+--- dwm-5.2-original/config.def.h	2008-09-09 21:46:17.000000000 +0200
++++ dwm-5.2-modified/config.def.h	2008-10-20 20:07:42.000000000 +0200
+@@ -28,11 +28,13 @@ static Rule rules[] = {
+ static float mfact      = 0.55; /* factor of master area size [0.05..0.95] */
+ static Bool resizehints = True; /* False means respect size hints in tiled resizals */
+ 
++#include "gaplessgrid.c"
+ static Layout layouts[] = {
+ 	/* symbol     arrange function */
+ 	{ "[]=",      tile },    /* first entry is default */
+ 	{ "><>",      NULL },    /* no layout function means floating behavior */
+ 	{ "[M]",      monocle },
++	{ "###",      gaplessgrid },
+ };
+ 
+ /* key definitions */
+diff -up dwm-5.2-original/gaplessgrid.c dwm-5.2-modified/gaplessgrid.c
+--- /dev/null	2008-10-20 20:09:51.000000000 +0200
++++ dwm-5.2-modified/gaplessgrid.c	2008-10-20 20:06:59.000000000 +0200
+@@ -0,0 +1,38 @@
++void
++gaplessgrid() {
++	unsigned int n, cols, rows, cn, rn, i, cx, cy, cw, ch;
++	Client *c;
++
++	for(n = 0, c = nexttiled(clients); c; c = nexttiled(c->next))
++		n++;
++	if(n == 0)
++		return;
++
++	/* grid dimensions */
++	for(cols = 0; cols <= n/2; cols++)
++		if(cols*cols >= n)
++			break;
++	if(n == 5)		/* set layout against the general calculation: not 1:2:2, but 2:3 */
++		cols = 2;
++	rows = n/cols;
++
++	/* window geometries (cell height/width/x/y) */
++	cw = ww / (cols ? cols : 1);
++	cn = 0; 			/* current column number */
++	rn = 0; 			/* current row number */
++	for(i = 0, c = nexttiled(clients); c; c = nexttiled(c->next)) {
++		if(i/rows+1 > cols-n%cols)
++			rows = n/cols+1;
++		ch = wh / (rows ? rows : 1);
++		cx = wx + cn*cw;
++		cy = wy + rn*ch;
++		resize(c, cx, cy, cw - 2 * c->bw, ch - 2 * c->bw, False);
++		
++		i++;
++		rn++;
++		if(rn >= rows) { 	/* jump to the next column */
++			rn = 0;
++			cn++;
++		}
++	}
++}
