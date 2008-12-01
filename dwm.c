@@ -449,6 +449,10 @@ configurerequest(XEvent *e) {
 		wc.border_width = ev->border_width;
 		wc.sibling = ev->above;
 		wc.stack_mode = ev->detail;
+
+        // Smart borders (not there when one client takes up the entire screen)
+        if(ev->width > 1900 && ev->height > 1150) wc.border_width = 0;
+
 		XConfigureWindow(dpy, ev->window, ev->value_mask, &wc);
 	}
 	XSync(dpy, False);
@@ -893,6 +897,10 @@ manage(Window w, XWindowAttributes *wa) {
 	}
 
 	wc.border_width = c->bw;
+
+    // Smart borders (not there when one client takes up the entire screen)
+    if(c->w > 1900 && c->h > 1150) wc.border_width = 0;
+
 	XConfigureWindow(dpy, w, CWBorderWidth, &wc);
 	XSetWindowBorder(dpy, w, dc.norm[ColBorder]);
 	configure(c); /* propagates border_width, if size doesn't change */
@@ -1113,7 +1121,7 @@ resize(Client *c, int x, int y, int w, int h, Bool sizehints) {
 		wc.border_width = c->bw;
 
         // Smart borders (not there when one client takes up the entire screen)
-        if(c->w > 1900 && c->h > 1180) wc.border_width = 0;
+        if(c->w > 1900 && c->h > 1150) wc.border_width = 0;
 
 		XConfigureWindow(dpy, c->win,
 				CWX|CWY|CWWidth|CWHeight|CWBorderWidth, &wc);
@@ -1184,6 +1192,10 @@ restack(void) {
 		wc.sibling = barwin;
 		for(c = stack; c; c = c->snext)
 			if(!c->isfloating && ISVISIBLE(c)) {
+
+                // Smart borders (not there when one client takes up the entire screen)
+                if(c->w > 1900 && c->h > 1150) wc.border_width = 0;
+
 				XConfigureWindow(dpy, c->win, CWSibling|CWStackMode, &wc);
 				wc.sibling = c->win;
 			}
@@ -1524,6 +1536,10 @@ unmanage(Client *c) {
 	/* The server grab construct avoids race conditions. */
 	XGrabServer(dpy);
 	XSetErrorHandler(xerrordummy);
+
+    // Smart borders (not there when one client takes up the entire screen)
+    if(c->w > 1900 && c->h > 1150) wc.border_width = 0;
+
 	XConfigureWindow(dpy, c->win, CWBorderWidth, &wc); /* restore border */
 	detach(c);
 	detachstack(c);
