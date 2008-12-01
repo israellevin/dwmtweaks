@@ -124,7 +124,7 @@ static Button buttons[] = {
 void
 lockMouse(const Arg *arg) {
 //    XGrabPointer(display, grab_window, owner_events, event_mask, pointer_mode, keyboard_mode, confine_to, cursor, time)
-    XGrabPointer(dpy, sel->win, True, ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, sel->win, None, CurrentTime);
+//    XGrabPointer(dpy, sel->win, True, ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, sel->win, None, CurrentTime);
     XWarpPointer(dpy, None, sel->win, 0, 0, 0, 0, 0, 0);
 }
 
