@@ -27,7 +27,6 @@ static Rule rules[] = {
 static float mfact      = 0.66; /* factor of master area size [0.05..0.95] */
 static Bool resizehints = False; /* False means respect size hints in tiled resizals */
 
-#include "tv.c"
 #include "gaplessgrid.c"
 #include "fibonacci.c"
 #include "bstack.c"
@@ -41,6 +40,11 @@ static Layout layouts[] = {
     { "[\\]",     dwindle },
     { "TTT",      bstack },
 };
+
+/* custom functions */
+static void lockMouse(const Arg *arg);
+static void unlockMouse(const Arg *arg);
+static void tv(const Arg *arg);
 
 /* key definitions */
 #define MODKEY Mod4Mask
@@ -64,8 +68,11 @@ static Key keys[] = {
 	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
 	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
+	{ MODKEY,                       XK_a,      unlockMouse,    {0} },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
+	{ MODKEY,                       XK_j,      lockMouse,      {0} },
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
+	{ MODKEY,                       XK_k,      lockMouse,      {0} },
 	{ MODKEY,                       XK_h,      setmfact,       {.f = -0.05} },
 	{ MODKEY,                       XK_l,      setmfact,       {.f = +0.05} },
 	{ MODKEY,                       XK_Return, zoom,           {0} },
@@ -113,3 +120,44 @@ static Button buttons[] = {
 	{ ClkTagBar,            MODKEY,         Button1,        tag,            {0} },
 	{ ClkTagBar,            MODKEY,         Button3,        toggletag,      {0} },
 };
+
+void
+lockMouse(const Arg *arg) {
+//    XGrabPointer(display, grab_window, owner_events, event_mask, pointer_mode, keyboard_mode, confine_to, cursor, time)
+    XGrabPointer(dpy, sel->win, True, ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, sel->win, None, CurrentTime);
+    XWarpPointer(dpy, None, sel->win, 0, 0, 0, 0, 0, 0);
+}
+
+void
+unlockMouse(const Arg *arg) {
+    XUngrabPointer(dpy, CurrentTime);
+}
+
+void
+tv(const Arg *arg) {
+    int x, y, w, h, nw, nh, ow, oh;
+
+    x = 1980;
+    y = 25;
+    w = nw = 925;
+    h = nh = 710;
+
+    if(sel->mina > 0 && sel->maxa > 0) {
+        if(sel->maxa < (float)w / h)
+            nw = h * sel->maxa;
+        else if(sel->mina < (float)h / w)
+            nh = w * sel->mina;
+    }
+
+    ow = w - nw;
+    oh = h - nh;
+
+    if(ow > 0) x += ow / 2;
+    if(oh > 0) y += oh / 2;
+
+    sel->isfloating = True;
+    sel->bw = 0;
+    sel->tags = TAGMASK;
+    resize(sel, x, y, nw, nh, False);
+    arrange();
+}
