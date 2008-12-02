@@ -42,7 +42,6 @@ static Layout layouts[] = {
 };
 
 /* custom functions */
-static void lockMouse(const Arg *arg);
 static void unlockMouse(const Arg *arg);
 static void tv(const Arg *arg);
 
@@ -70,9 +69,7 @@ static Key keys[] = {
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
 	{ MODKEY,                       XK_a,      unlockMouse,    {0} },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
-	{ MODKEY,                       XK_j,      lockMouse,      {0} },
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
-	{ MODKEY,                       XK_k,      lockMouse,      {0} },
 	{ MODKEY,                       XK_h,      setmfact,       {.f = -0.05} },
 	{ MODKEY,                       XK_l,      setmfact,       {.f = +0.05} },
 	{ MODKEY,                       XK_Return, zoom,           {0} },
@@ -122,15 +119,8 @@ static Button buttons[] = {
 };
 
 void
-lockMouse(const Arg *arg) {
-//    XGrabPointer(display, grab_window, owner_events, event_mask, pointer_mode, keyboard_mode, confine_to, cursor, time)
-//    XGrabPointer(dpy, sel->win, True, ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, sel->win, None, CurrentTime);
-    XWarpPointer(dpy, None, sel->win, 0, 0, 0, 0, 0, 0);
-}
-
-void
 unlockMouse(const Arg *arg) {
-    XUngrabPointer(dpy, CurrentTime);
+    freeMouse = !freeMouse;
 }
 
 void

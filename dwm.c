@@ -237,6 +237,7 @@ static Display *dpy;
 static DC dc;
 static Layout *lt[] = { NULL, NULL };
 static Window root, barwin;
+static Bool freeMouse = False;
 /* configuration, allows nested code to access above variables */
 #include "config.h"
 
@@ -611,9 +612,13 @@ enternotify(XEvent *e) {
 
 	if((ev->mode != NotifyNormal || ev->detail == NotifyInferior) && ev->window != root)
 		return;
-	if((c = getclient(ev->window)))
-		focus(c);
-	else
+	if((c = getclient(ev->window))) {
+        if(freeMouse) focus(c);
+        else {
+            
+            XWarpPointer(dpy, None, sel->win, 0, 0, 0, 0, MAX(MIN(ev->x_root - sel->x, sel->w), 0), MAX(MIN(ev->y_root - sel->y, sel->h), 0));
+        }
+    } else
 		focus(NULL);
 }
 
