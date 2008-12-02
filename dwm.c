@@ -620,6 +620,7 @@ enternotify(XEvent *e) {
         else
             focus(NULL);
     } else if (sel) {
+        if((ev->x_root > sel->x) && (ev->y_root > sel->y) && (ev->x_root < (sel->x + sel->w)) && (ev->y_root < (sel->y + sel->h))) return;
         if(ignoreevent)
             ignoreevent = False;
         else {
@@ -655,7 +656,7 @@ focus(Client *c) {
 		XSetWindowBorder(dpy, c->win, dc.sel[ColBorder]);
 		XSetInputFocus(dpy, c->win, RevertToPointerRoot, CurrentTime);
 
-        //XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w / 2, c->h / 2);
+        XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w / 2, c->h / 2);
 	}
 	else
 		XSetInputFocus(dpy, root, RevertToPointerRoot, CurrentTime);
