@@ -238,7 +238,6 @@ static DC dc;
 static Layout *lt[] = { NULL, NULL };
 static Window root, barwin;
 static Bool freemouse = False;
-static Bool ignoreevent = False;
 /* configuration, allows nested code to access above variables */
 #include "config.h"
 
@@ -619,16 +618,10 @@ enternotify(XEvent *e) {
             focus(c);
         else
             focus(NULL);
-    } else if (sel) {
-        if((ev->x_root > sel->x) && (ev->y_root > sel->y) && (ev->x_root < (sel->x + sel->w)) && (ev->y_root < (sel->y + sel->h))) return;
-        if(ignoreevent)
-            ignoreevent = False;
-        else {
-            if(ev->x_root > 1900) {
-                ignoreevent = True;
-                XWarpPointer(dpy, None, sel->win, 0, 0, 0, 0, 0, 0);
-            }
-            XWarpPointer(dpy, None, sel->win, 0, 0, 0, 0, MAX(MIN(ev->x_root - sel->x, sel->w), 0), MAX(MIN(ev->y_root - sel->y, sel->h), 0));
+    } else {
+        if(ev->x_root > 1915) {
+            XWarpPointer(dpy, None, root, 0, 0, 0, 0, 1900, ev->y);
+            XWarpPointer(dpy, None, root, 0, 0, 0, 0, 1915, ev->y);
         }
     }
 }
