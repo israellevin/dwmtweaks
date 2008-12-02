@@ -612,13 +612,18 @@ enternotify(XEvent *e) {
    
     if((ev->mode != NotifyNormal || ev->detail == NotifyInferior) && ev->window != root)
         return;
-    if(freemouse)
+
+    if(freemouse){
         if((c = getclient(ev->window)))
             focus(c);
         else
             focus(NULL);
-    else if(sel)
+    }
+    else if(sel) {
+        if(ev->x_root > 1920)
+            XWarpPointer(dpy, root, sel->win, 0, 0, 0, 0, 0, 0);
         XWarpPointer(dpy, None, sel->win, 0, 0, 0, 0, MAX(MIN(ev->x_root - sel->x, sel->w), 0), MAX(MIN(ev->y_root - sel->y, sel->h), 0));
+    }
 }
 
 void
