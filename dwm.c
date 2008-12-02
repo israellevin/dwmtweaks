@@ -656,7 +656,8 @@ focus(Client *c) {
 		XSetWindowBorder(dpy, c->win, dc.sel[ColBorder]);
 		XSetInputFocus(dpy, c->win, RevertToPointerRoot, CurrentTime);
 
-        XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w / 2, c->h / 2);
+        if(!freemouse)
+            XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w / 2, c->h / 2);
 	}
 	else
 		XSetInputFocus(dpy, root, RevertToPointerRoot, CurrentTime);
