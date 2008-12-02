@@ -120,7 +120,7 @@ static Button buttons[] = {
 
 void
 unlockMouse(const Arg *arg) {
-    freeMouse = !freeMouse;
+    freemouse = !freemouse;
 }
 
 void

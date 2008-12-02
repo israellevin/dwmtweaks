@@ -237,7 +237,7 @@ static Display *dpy;
 static DC dc;
 static Layout *lt[] = { NULL, NULL };
 static Window root, barwin;
-static Bool freemouse = False;
+static Bool freeMouse = False;
 /* configuration, allows nested code to access above variables */
 #include "config.h"
 
@@ -607,18 +607,42 @@ drawtext(const char *text, unsigned long col[ColLast], Bool invert) {
 
 void
 enternotify(XEvent *e) {
-    Client *c;
-    XCrossingEvent *ev = &e->xcrossing;
-   
-    if((ev->mode != NotifyNormal || ev->detail == NotifyInferior) && ev->window != root)
-        return;
-    if(freemouse)
+	Client *c;
+	XCrossingEvent *ev = &e->xcrossing;
+
+	if((ev->mode != NotifyNormal || ev->detail == NotifyInferior) && ev->window != root)
+		return;
+    if(freeMouse) {
         if((c = getclient(ev->window)))
             focus(c);
         else
             focus(NULL);
-    else if(sel)
-        XWarpPointer(dpy, None, sel->win, 0, 0, 0, 0, MAX(MIN(ev->x_root - sel->x, sel->w), 0), MAX(MIN(ev->y_root - sel->y, sel->h), 0));
+    } else {
+        if(!sel) return;
+
+        XGrabPointer(dpy, root, False, MOUSEMASK, GrabModeAsync, GrabModeAsync,	sel->win, None, CurrentTime);
+        sprintf(stext, "asd");
+        XUngrabPointer(dpy, CurrentTime);
+        //int newx = ev->x_root;
+        //int newy = ev->y_root;
+
+        //if((newx > sel->x) && (newx < sel->x + sel->w) && (newy > sel->y) && (newy < sel->y + sel->h)) return;
+
+        /*
+        if(newx < sel->x) newx = sel->x;
+        if(newx > sel->x + sel->w) newx = sel->x + sel->w;
+
+        if(newy < sel->y) newy = sel->y;
+        if(newy > sel->y + sel->h) newy = sel->y + sel->h;
+
+        newx = newx - sel->x;
+        newy = newy - sel->y;
+        */
+        //sprintf(stext, "%d, %d",  newx, newy);
+        //drawbar();
+        //XWarpPointer(dpy, None, sel->win, 0, 0, 0, 0, newx, newy);
+        //XWarpPointer(dpy, None, sel->win, 0, 0, 0, 0, MAX(MIN(ev->x_root - sel->x, sel->w - 10), 10), MAX(MIN(ev->y_root - sel->y, sel->h), 0));
+    }
 }
 
 void
