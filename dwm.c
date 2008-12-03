@@ -237,6 +237,8 @@ static Display *dpy;
 static DC dc;
 static Layout *lt[] = { NULL, NULL };
 static Window root, barwin;
+static int screensizex = 1920 - 4;
+static int screensizey = 1200;
 static Bool freemouse = False;
 /* configuration, allows nested code to access above variables */
 #include "config.h"
@@ -452,7 +454,7 @@ configurerequest(XEvent *e) {
 		wc.stack_mode = ev->detail;
 
         // Smart borders (not there when one client takes up the entire screen)
-        if(ev->width > 1915 && ev->height > 1100) wc.border_width = 0;
+        if(ev->width > screensizex && ev->height > 1100) wc.border_width = 0;
 
 		XConfigureWindow(dpy, ev->window, ev->value_mask, &wc);
 	}
@@ -619,9 +621,9 @@ enternotify(XEvent *e) {
         else
             focus(NULL);
     } else {
-        if(ev->x_root > 1915) {
-            XWarpPointer(dpy, None, root, 0, 0, 0, 0, 1915, ev->y);
-            XWarpPointer(dpy, None, root, 0, 0, 0, 0, 1915, ev->y);
+        if(ev->x_root > screensizex) {
+            XWarpPointer(dpy, None, root, 0, 0, 0, 0, screensizex, ev->y);
+            XWarpPointer(dpy, None, root, 0, 0, 0, 0, screensizex, ev->y);
         }
     }
 }
@@ -643,12 +645,6 @@ focus(Client *c) {
 		XSetWindowBorder(dpy, sel->win, dc.norm[ColBorder]);
 	}
 	if(c) {
-        if(!freemouse) {
-            if(c->x > 1915)
-                return;
-            XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w / 2, c->h / 2);
-        }
-
 		detachstack(c);
 		attachstack(c);
 		grabbuttons(c, True);
@@ -676,17 +672,17 @@ focusstack(const Arg *arg) {
 	if(!sel)
 		return;
 	if (arg->i > 0) {
-		for(c = sel->next; c && !ISVISIBLE(c); c = c->next);
+		for(c = sel->next; c && (!ISVISIBLE(c) || (c->x > screensizex && !freemouse)); c = c->next);
 		if(!c)
-			for(c = clients; c && !ISVISIBLE(c); c = c->next);
+			for(c = clients; c && (!ISVISIBLE(c) || (c->x > screensizex && !freemouse)); c = c->next);
 	}
 	else {
 		for(i = clients; i != sel; i = i->next)
-			if(ISVISIBLE(i))
+			if(ISVISIBLE(i) && (i->x < 1916 || freemouse))
 				c = i;
 		if(!c)
 			for(; i; i = i->next)
-				if(ISVISIBLE(i))
+				if(ISVISIBLE(i) && (i->x < 1916 || freemouse))
 					c = i;
 	}
 	if(c) {
@@ -914,7 +910,7 @@ manage(Window w, XWindowAttributes *wa) {
 	wc.border_width = c->bw;
 
     // Smart borders (not there when one client takes up the entire screen)
-    if(c->w > 1915 && c->h > 1150) wc.border_width = 0;
+    if(c->w > screensizex - 50 && c->h > screensizey - 50) wc.border_width = 0;
 
 	XConfigureWindow(dpy, w, CWBorderWidth, &wc);
 	XSetWindowBorder(dpy, w, dc.norm[ColBorder]);
@@ -1136,7 +1132,7 @@ resize(Client *c, int x, int y, int w, int h, Bool sizehints) {
 		wc.border_width = c->bw;
 
         // Smart borders (not there when one client takes up the entire screen)
-        if(c->w > 1915 && c->h > 1150) wc.border_width = 0;
+    if(c->w > screensizex - 50 && c->h > screensizey - 50) wc.border_width = 0;
 
 		XConfigureWindow(dpy, c->win,
 				CWX|CWY|CWWidth|CWHeight|CWBorderWidth, &wc);
@@ -1209,7 +1205,7 @@ restack(void) {
 			if(!c->isfloating && ISVISIBLE(c)) {
 
                 // Smart borders (not there when one client takes up the entire screen)
-                if(c->w > 1915 && c->h > 1150) wc.border_width = 0;
+                if(c->w > screensizex - 50 && c->h > screensizey - 50) wc.border_width = 0;
 
 				XConfigureWindow(dpy, c->win, CWSibling|CWStackMode, &wc);
 				wc.sibling = c->win;
@@ -1553,7 +1549,7 @@ unmanage(Client *c) {
 	XSetErrorHandler(xerrordummy);
 
     // Smart borders (not there when one client takes up the entire screen)
-    if(c->w > 1915 && c->h > 1150) wc.border_width = 0;
+    if(c->w > screensizex - 50 && c->h > screensizey - 50) wc.border_width = 0;
 
 	XConfigureWindow(dpy, c->win, CWBorderWidth, &wc); /* restore border */
 	detach(c);
