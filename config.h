@@ -77,8 +77,9 @@ static Key keys[] = {
 	{ MODKEY,                       XK_Return, zoom,           {0} },
 	{ MODKEY,                       XK_Tab,    view,           {0} },
 	{ MODKEY,	                    XK_c,      killclient,     {0} },
-	{ MODKEY,                       XK_Right,  tv,             {0} },
+	{ MODKEY,                       XK_Right,  tv,             {.i = 1} },
 	{ MODKEY,                       XK_Right,  focusstack,     {.i = -1 } },
+	{ MODKEY,                       XK_Left,  tv,             {.i = 0} },
 	{ MODKEY,                       XK_t,      setlayout,      {.v = &layouts[0]} },
 	{ MODKEY,                       XK_f,      setlayout,      {.v = &layouts[1]} },
 	{ MODKEY,                       XK_m,      setlayout,      {.v = &layouts[2]} },
@@ -128,29 +129,43 @@ togglefreemouse(const Arg *arg) {
 
 void
 tv(const Arg *arg) {
-    int x, y, w, h, nw, nh, ow, oh;
-
-    x = 1980;
-    y = 25;
-    w = nw = 925;
-    h = nh = 710;
-
-    if(sel->mina > 0 && sel->maxa > 0) {
-        if(sel->maxa < (float)w / h)
-            nw = h * sel->maxa;
-        else if(sel->mina < (float)h / w)
-            nh = w * sel->mina;
+    Bool oldmouse = freemouse;
+    Client *oldsel = sel;
+    if(tvc) {
+        freemouse = True;
+        tvc->isfloating = False;
+        tvc->bw = borderpx;
+        tvc->tags = tagset[seltags];
+        focus(tvc);
+        tvc = NULL;
     }
+    if(arg->i == 1) {
+        if(!oldsel) return;
+        int x, y, w, h, nw, nh, ow, oh;
+        x = 1980;
+        y = 25;
+        w = nw = 925;
+        h = nh = 710;
 
-    ow = w - nw;
-    oh = h - nh;
+        if(oldsel->mina > 0 && oldsel->maxa > 0) {
+            if(oldsel->maxa < (float)w / h)
+                nw = h * oldsel->maxa;
+            else if(oldsel->mina < (float)h / w)
+                nh = w * oldsel->mina;
+        }
 
-    if(ow > 0) x += ow / 2;
-    if(oh > 0) y += oh / 2;
+        ow = w - nw;
+        oh = h - nh;
 
-    sel->isfloating = True;
-    sel->bw = 0;
-    sel->tags = TAGMASK;
-    resize(sel, x, y, nw, nh, False);
+        if(ow > 0) x += ow / 2;
+        if(oh > 0) y += oh / 2;
+
+        oldsel->isfloating = True;
+        oldsel->bw = 0;
+        oldsel->tags = TAGMASK;
+        resize(oldsel, x, y, nw, nh, False);
+        tvc = oldsel;
+    }
     arrange();
+    freemouse = oldmouse;
 }

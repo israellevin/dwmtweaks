@@ -240,6 +240,7 @@ static Window root, barwin;
 static int screensizex = 1920 - 5;
 static int screensizey = 1200;
 static Bool freemouse = False;
+static Client *tvc = NULL;
 /* configuration, allows nested code to access above variables */
 #include "config.h"
 
