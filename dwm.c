@@ -47,7 +47,7 @@
 #define BUTTONMASK              (ButtonPressMask|ButtonReleaseMask)
 #define CLEANMASK(mask)         (mask & ~(numlockmask|LockMask))
 #define INRECT(X,Y,RX,RY,RW,RH) ((X) >= (RX) && (X) < (RX) + (RW) && (Y) >= (RY) && (Y) < (RY) + (RH))
-#define ISVISIBLE(x)            (x->tags & tagset[seltags])
+#define ISVISIBLE(X)            ((X->tags & tagset[seltags]) && ((X->x < screensizex) || freemouse))
 #define LENGTH(x)               (sizeof x / sizeof x[0])
 #define MAX(a, b)               ((a) > (b) ? (a) : (b))
 #define MIN(a, b)               ((a) < (b) ? (a) : (b))
@@ -237,7 +237,7 @@ static Display *dpy;
 static DC dc;
 static Layout *lt[] = { NULL, NULL };
 static Window root, barwin;
-static int screensizex = 1920 - 4;
+static int screensizex = 1920 - 5;
 static int screensizey = 1200;
 static Bool freemouse = False;
 /* configuration, allows nested code to access above variables */
@@ -672,17 +672,17 @@ focusstack(const Arg *arg) {
 	if(!sel)
 		return;
 	if (arg->i > 0) {
-		for(c = sel->next; c && (!ISVISIBLE(c) || (c->x > screensizex && !freemouse)); c = c->next);
+		for(c = sel->next; c && !ISVISIBLE(c); c = c->next);
 		if(!c)
-			for(c = clients; c && (!ISVISIBLE(c) || (c->x > screensizex && !freemouse)); c = c->next);
+			for(c = clients; c && !ISVISIBLE(c); c = c->next);
 	}
 	else {
 		for(i = clients; i != sel; i = i->next)
-			if(ISVISIBLE(i) && (i->x < 1916 || freemouse))
+			if(ISVISIBLE(i))
 				c = i;
 		if(!c)
 			for(; i; i = i->next)
-				if(ISVISIBLE(i) && (i->x < 1916 || freemouse))
+				if(ISVISIBLE(i))
 					c = i;
 	}
 	if(c) {
