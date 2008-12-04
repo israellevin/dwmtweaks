@@ -47,7 +47,8 @@
 #define BUTTONMASK              (ButtonPressMask|ButtonReleaseMask)
 #define CLEANMASK(mask)         (mask & ~(numlockmask|LockMask))
 #define INRECT(X,Y,RX,RY,RW,RH) ((X) >= (RX) && (X) < (RX) + (RW) && (Y) >= (RY) && (Y) < (RY) + (RH))
-#define ISVISIBLE(X)            ((X->tags & tagset[seltags]) && ((X->x < screensizex) || freemouse))
+#define ISVISIBLE(x)            (x->tags & tagset[seltags])
+#define ISFOCABLE(X)            ((X->tags & tagset[seltags]) && ((X->x < screensizex) || freemouse))
 #define LENGTH(x)               (sizeof x / sizeof x[0])
 #define MAX(a, b)               ((a) > (b) ? (a) : (b))
 #define MIN(a, b)               ((a) < (b) ? (a) : (b))
@@ -639,8 +640,10 @@ expose(XEvent *e) {
 
 void
 focus(Client *c) {
-	if(!c || !ISVISIBLE(c))
-		for(c = stack; c && !ISVISIBLE(c); c = c->snext);
+	//if(!c || !ISVISIBLE(c))
+	//	for(c = stack; c && !ISVISIBLE(c); c = c->snext);
+	if(!c || !ISFOCABLE(c))
+		for(c = stack; c && !ISFOCABLE(c); c = c->snext);
 	if(sel && sel != c) {
 		grabbuttons(sel, False);
 		XSetWindowBorder(dpy, sel->win, dc.norm[ColBorder]);
@@ -673,17 +676,21 @@ focusstack(const Arg *arg) {
 	if(!sel)
 		return;
 	if (arg->i > 0) {
-		for(c = sel->next; c && !ISVISIBLE(c); c = c->next);
+		//for(c = sel->next; c && !ISVISIBLE(c); c = c->next);
+		for(c = sel->next; c && !ISFOCABLE(c); c = c->next);
 		if(!c)
-			for(c = clients; c && !ISVISIBLE(c); c = c->next);
+			//for(c = clients; c && !ISVISIBLE(c); c = c->next);
+			for(c = clients; c && !ISFOCABLE(c); c = c->next);
 	}
 	else {
 		for(i = clients; i != sel; i = i->next)
-			if(ISVISIBLE(i))
+			//if(ISVISIBLE(i))
+			if(ISFOCABLE(i))
 				c = i;
 		if(!c)
 			for(; i; i = i->next)
-				if(ISVISIBLE(i))
+				//if(ISVISIBLE(i))
+				if(ISFOCABLE(i))
 					c = i;
 	}
 	if(c) {
