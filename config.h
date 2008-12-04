@@ -61,8 +61,9 @@ static void tv(const Arg *arg);
 /* commands */
 static const char *dmenucmd[] = { "dmenu_run", "-b", "-fn", "-*-terminus-*-*-*-*-64-*-*-*-*-*-*-*", "-nb", "#ff0000", "-nf", "#000000", "-sb", selbgcolor, "-sf", selfgcolor, NULL };
 static const char *termcmd[]  = { "aterm", "-fn", "-*-terminus-*-*-*-*-32-*-*-*-*-*-*-*", "-fade", "70", "-fg", "grey", "-pixmap", "~/pictures/Wallpapers/raindark.jpg", "+sb", NULL };
-static const char *termcmd2[]  = { "konsole", NULL };
-
+static const char *termcmd2[]  = { "konsole", "--background-mode", NULL };
+static const char *looseendscmd[]  = { "bash", "/root/scripts/skill.sh", NULL };
+ 
 static Key keys[] = {
 	/* modifier                     key        function        argument */
 	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
@@ -79,7 +80,7 @@ static Key keys[] = {
 	{ MODKEY,	                    XK_c,      killclient,     {0} },
 	{ MODKEY,                       XK_Right,  tv,             {.i = 1} },
 	{ MODKEY,                       XK_Right,  focusstack,     {.i = -1 } },
-	{ MODKEY,                       XK_Left,  tv,             {.i = 0} },
+	{ MODKEY,                       XK_Left,   tv,             {.i = 0} },
 	{ MODKEY,                       XK_t,      setlayout,      {.v = &layouts[0]} },
 	{ MODKEY,                       XK_f,      setlayout,      {.v = &layouts[1]} },
 	{ MODKEY,                       XK_m,      setlayout,      {.v = &layouts[2]} },
@@ -101,6 +102,7 @@ static Key keys[] = {
 	TAGKEYS(                        XK_7,                      6)
 	TAGKEYS(                        XK_8,                      7)
 	TAGKEYS(                        XK_9,                      8)
+	{ MODKEY|ShiftMask,             XK_q,      spawn,          {.v = looseendscmd } },
 	{ MODKEY|ShiftMask,             XK_q,      quit,           {0} },
 };
 
