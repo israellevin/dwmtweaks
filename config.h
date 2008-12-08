@@ -60,7 +60,7 @@ static void tv(const Arg *arg);
 
 /* commands */
 static const char *dmenucmd[] = { "dmenu_run", "-b", "-fn", "-*-terminus-*-*-*-*-64-*-*-*-*-*-*-*", "-nb", "#ff0000", "-nf", "#000000", "-sb", selbgcolor, "-sf", selfgcolor, NULL };
-static const char *termcmd[]  = { "aterm", "-fn", "-*-terminus-*-*-*-*-32-*-*-*-*-*-*-*", "-fade", "70", "-fg", "grey", "-pixmap", "~/pictures/Wallpapers/raindark.jpg", "+sb", NULL };
+static const char *termcmd[]  = { "aterm", "-fn", "-*-terminus-*-*-*-*-32-*-*-*-*-*-*-*", "-fade", "70", "-fg", "grey", "-pixmap", "~/pictures/Wallpapers/raindark.jpg", "+sb", "--color12", "white", NULL };
 static const char *termcmd2[]  = { "konsole", "--background-mode", NULL };
 static const char *looseendscmd[]  = { "bash", "/root/scripts/skill.sh", NULL };
  
@@ -79,8 +79,9 @@ static Key keys[] = {
 	{ MODKEY,                       XK_Tab,    view,           {0} },
 	{ MODKEY,	                    XK_c,      killclient,     {0} },
 	{ MODKEY,                       XK_Right,  tv,             {.i = 1} },
-	{ MODKEY,                       XK_Right,  focusstack,     {.i = -1 } },
+	{ MODKEY,                       XK_Right,  focusstack,     {.i = 1 } },
 	{ MODKEY,                       XK_Left,   tv,             {.i = 0} },
+	{ MODKEY,                       XK_Down,   tv,             {.i = 2} },
 	{ MODKEY,                       XK_t,      setlayout,      {.v = &layouts[0]} },
 	{ MODKEY,                       XK_f,      setlayout,      {.v = &layouts[1]} },
 	{ MODKEY,                       XK_m,      setlayout,      {.v = &layouts[2]} },
@@ -133,16 +134,19 @@ void
 tv(const Arg *arg) {
     Bool oldmouse = freemouse;
     Client *oldsel = sel;
+    freemouse = True;
     if(tvc) {
-        freemouse = True;
-        tvc->isfloating = False;
-        tvc->bw = borderpx;
-        tvc->tags = tagset[seltags];
-        focus(tvc);
+        if(arg->i == 2)
+            resize(tvc, 0, 0, tvc->w, tvc->h, False);
+        else {
+            tvc->isfloating = False;
+            tvc->bw = borderpx;
+            tvc->tags = tagset[seltags];
+            focus(tvc);
+        }
         tvc = NULL;
     }
-    if(arg->i == 1) {
-        if(!oldsel) return;
+    if(arg->i == 1 && oldsel) {
         int x, y, w, h, nw, nh, ow, oh;
         x = 1980;
         y = 25;
