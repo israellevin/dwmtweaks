@@ -148,7 +148,7 @@ tv(const Arg *arg) {
     }
     if(arg->i == 1 && oldsel) {
         int x, y, w, h, nw, nh, ow, oh;
-        x = 1980;
+        x = 1980 + 1000;
         y = 25;
         w = nw = 925;
         h = nh = 710;
