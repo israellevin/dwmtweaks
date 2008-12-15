@@ -60,7 +60,7 @@ static void tv(const Arg *arg);
 
 /* commands */
 static const char *dmenucmd[] = { "dmenu_run", "-b", "-fn", "-*-terminus-*-*-*-*-64-*-*-*-*-*-*-*", "-nb", "#ff0000", "-nf", "#000000", "-sb", selbgcolor, "-sf", selfgcolor, NULL };
-static const char *termcmd[]  = { "aterm", "-fn", "-*-terminus-*-*-*-*-32-*-*-*-*-*-*-*", "-fade", "70", "-fg", "grey", "-pixmap", "~/pictures/Wallpapers/raindark.jpg", "+sb", "--color12", "white", NULL };
+static const char *termcmd[]  = { "rxvt-unicode", "-fn", "-*-terminus-*-*-*-*-32-*-*-*-*-*-*-*", "-fade", "30", "-fg", "grey", "-pixmap", "~/pictures/Wallpapers/raindark.jpg", "-cr", "green", "-vb" "+sb", "-b", "0", "-w", "0", "--color12", "white", NULL };
 static const char *termcmd2[]  = { "konsole", "--background-mode", NULL };
 static const char *looseendscmd[]  = { "bash", "/root/scripts/skill.sh", NULL };
  
