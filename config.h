@@ -10,7 +10,7 @@ static const char selbgcolor[]      = "#000000";
 static const char selfgcolor[]      = "#00ff00";
 static unsigned int borderpx        = 2;        /* border pixel of windows */
 static unsigned int snap            = 64;       /* snap pixel */
-static Bool showbar                 = False;     /* False means no bar */
+static Bool showbar                 = False;    /* False means no bar */
 static Bool topbar                  = True;     /* False means bottom bar */
 static Bool readin                  = True;     /* False means do not read stdin */
 
@@ -60,7 +60,7 @@ static void tv(const Arg *arg);
 
 /* commands */
 static const char *dmenucmd[] = { "dmenu_run", "-b", "-fn", "-*-terminus-*-*-*-*-64-*-*-*-*-*-*-*", "-nb", "#ff0000", "-nf", "#000000", "-sb", selbgcolor, "-sf", selfgcolor, NULL };
-static const char *termcmd[]  = { "rxvt-unicode", "-fn", "-*-terminus-*-*-*-*-32-*-*-*-*-*-*-*", "-fade", "30", "-fg", "grey", "-pixmap", "~/pictures/Wallpapers/raindark.jpg", "-cr", "green", "-vb" "+sb", "-b", "0", "-w", "0", "--color12", "white", NULL };
+static const char *termcmd[]  = { "urxvtcd", "-fade", "30", "-fg", "grey", "-pixmap", "/root/pictures/Wallpapers/raindark.jpg", "-cr", "green", "-fn", "-*-terminus-*-*-*-*-32-*-*-*-*-*-*-*", "-vb", "+sb", "-b", "0", "-w", "0", "--color12", "white", NULL };
 static const char *termcmd2[]  = { "konsole", "--background-mode", NULL };
 static const char *looseendscmd[]  = { "bash", "/root/scripts/skill.sh", NULL };
  
@@ -134,19 +134,22 @@ void
 tv(const Arg *arg) {
     Bool oldmouse = freemouse;
     Client *oldsel = sel;
+	XWindowAttributes wa;
     freemouse = True;
     if(tvc) {
-        if(arg->i == 2)
-            resize(tvc, 0, 0, tvc->w, tvc->h, False);
-        else {
-            tvc->isfloating = False;
-            tvc->bw = borderpx;
-            tvc->tags = tagset[seltags];
-            focus(tvc);
+        if((XGetWindowAttributes(dpy, tvc->win, &wa)) && (wa.map_state == IsViewable)) {
+            if(arg->i == 2) {
+                resize(tvc, 0, 0, tvc->w, tvc->h, False);
+            } else {
+                tvc->isfloating = False;
+                tvc->bw = borderpx;
+                tvc->tags = tagset[seltags];
+            }
         }
+        focus(tvc);
         tvc = NULL;
     }
-    if(arg->i == 1 && oldsel) {
+    if(arg->i == 1 && oldsel && ISVISIBLE(oldsel)) {
         int x, y, w, h, nw, nh, ow, oh;
         x = 1980 + 1000;
         y = 25;
@@ -170,6 +173,7 @@ tv(const Arg *arg) {
         oldsel->bw = 0;
         oldsel->tags = TAGMASK;
         resize(oldsel, x, y, nw, nh, False);
+        focus(oldsel);
         tvc = oldsel;
     }
     arrange();
