@@ -13,6 +13,8 @@ static unsigned int snap            = 64;       /* snap pixel */
 static Bool showbar                 = False;    /* False means no bar */
 static Bool topbar                  = True;     /* False means bottom bar */
 static Bool readin                  = True;     /* False means do not read stdin */
+static Bool usegrab                 = False;    /* True means grabbing the X server
+                                                   during mouse-based resizals */
 
 /* tagging */
 static const char tags[][MAXTAGLEN] = { "1", "2", "3" };
@@ -60,7 +62,7 @@ static void tv(const Arg *arg);
 
 /* commands */
 static const char *dmenucmd[] = { "dmenu_run", "-b", "-fn", "-*-terminus-*-*-*-*-64-*-*-*-*-*-*-*", "-nb", "#ff0000", "-nf", "#000000", "-sb", selbgcolor, "-sf", selfgcolor, NULL };
-static const char *termcmd[]  = { "urxvtcd", "-fade", "30", "-fg", "grey", "-pixmap", "/root/pictures/Wallpapers/raindark.jpg", "-cr", "green", "-fn", "-*-terminus-*-*-*-*-32-*-*-*-*-*-*-*", "-vb", "+sb", "-b", "0", "-w", "0", "--color12", "white", NULL };
+static const char *termcmd[]  = { "urxvtcd", "-fade", "30", "-fg", "grey", "-bg", "black", "-cr", "green", "-fn", "-*-terminus-*-*-*-*-32-*-*-*-*-*-*-*", "-vb", "+sb", "-b", "0", "-w", "0", "--color12", "white", NULL };
 static const char *termcmd2[]  = { "konsole", "--background-mode", NULL };
 static const char *looseendscmd[]  = { "bash", "/root/scripts/skill.sh", NULL };
  
@@ -78,9 +80,10 @@ static Key keys[] = {
 	{ MODKEY,                       XK_Return, zoom,           {0} },
 	{ MODKEY,                       XK_Tab,    view,           {0} },
 	{ MODKEY,	                    XK_c,      killclient,     {0} },
-	{ MODKEY,                       XK_Right,  tv,             {.i = 1} },
-	{ MODKEY,                       XK_Right,  focusstack,     {.i = 1 } },
-	{ MODKEY,                       XK_Left,   tv,             {.i = 0} },
+	{ MODKEY,	                    XK_q,      killclient,     {0} },
+	{ MODKEY,                       XK_Right,  tv,             {.i = 0} },
+	{ MODKEY,                       XK_Right,  focusstack,     {.i = 0} },
+	{ MODKEY,                       XK_Left,   tv,             {.i = 1} },
 	{ MODKEY,                       XK_Down,   tv,             {.i = 2} },
 	{ MODKEY,                       XK_t,      setlayout,      {.v = &layouts[0]} },
 	{ MODKEY,                       XK_f,      setlayout,      {.v = &layouts[1]} },
@@ -125,18 +128,17 @@ static Button buttons[] = {
 	{ ClkTagBar,            MODKEY,         Button3,        toggletag,      {0} },
 };
 
-void
-togglefreemouse(const Arg *arg) {
+static void togglefreemouse(const Arg *arg) {
     freemouse = !freemouse;
 }
 
-void
-tv(const Arg *arg) {
+void tv(const Arg *arg) {
     Bool oldmouse = freemouse;
     Client *oldsel = sel;
 	XWindowAttributes wa;
+
     freemouse = True;
-    if(tvc) {
+    if(tvc && ISVISIBLE(tvc)) {
         if((XGetWindowAttributes(dpy, tvc->win, &wa)) && (wa.map_state == IsViewable)) {
             if(arg->i == 2) {
                 resize(tvc, 0, 0, tvc->w, tvc->h, False);
@@ -145,11 +147,11 @@ tv(const Arg *arg) {
                 tvc->bw = borderpx;
                 tvc->tags = tagset[seltags];
             }
+            focus(tvc);
         }
-        focus(tvc);
         tvc = NULL;
     }
-    if(arg->i == 1 && oldsel && ISVISIBLE(oldsel)) {
+    if(arg->i == 0 && oldsel && ISVISIBLE(oldsel)) {
         int x, y, w, h, nw, nh, ow, oh;
         x = 1980 + 1000;
         y = 25;
@@ -173,7 +175,6 @@ tv(const Arg *arg) {
         oldsel->bw = 0;
         oldsel->tags = TAGMASK;
         resize(oldsel, x, y, nw, nh, False);
-        focus(oldsel);
         tvc = oldsel;
     }
     arrange();

@@ -1,10 +1,10 @@
 /* See LICENSE file for copyright and license details. */
 
 /* appearance */
-static const char font[]            = "-*-inconsolata-*-*-*-*-24-*-*-*-*-*-*-*";
-static const char normbordercolor[] = "#000000";
-static const char normbgcolor[]     = "#000000";
-static const char normfgcolor[]     = "#00ff00";
+static const char font[]            = "-*-terminus-medium-r-normal-*-14-*-*-*-*-*-*-*";
+static const char normbordercolor[] = "#cccccc";
+static const char normbgcolor[]     = "#cccccc";
+static const char normfgcolor[]     = "#000000";
 static const char selbordercolor[]  = "#0066ff";
 static const char selbgcolor[]      = "#0066ff";
 static const char selfgcolor[]      = "#ffffff";
@@ -13,9 +13,11 @@ static unsigned int snap            = 32;       /* snap pixel */
 static Bool showbar                 = True;     /* False means no bar */
 static Bool topbar                  = True;     /* False means bottom bar */
 static Bool readin                  = True;     /* False means do not read stdin */
+static Bool usegrab                 = False;    /* True means grabbing the X server
+                                                   during mouse-based resizals */
 
 /* tagging */
-static const char tags[][MAXTAGLEN] = { "1", "2", "3" };
+static const char tags[][MAXTAGLEN] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
 static unsigned int tagset[] = {1, 1}; /* after start, first tag is selected */
 
 static Rule rules[] = {
@@ -25,20 +27,18 @@ static Rule rules[] = {
 };
 
 /* layout(s) */
-static float mfact      = 0.65; /* factor of master area size [0.05..0.95] */
+static float mfact      = 0.55; /* factor of master area size [0.05..0.95] */
 static Bool resizehints = True; /* False means respect size hints in tiled resizals */
 
-#include "bstack.c"
 static Layout layouts[] = {
 	/* symbol     arrange function */
 	{ "[]=",      tile },    /* first entry is default */
 	{ "><>",      NULL },    /* no layout function means floating behavior */
 	{ "[M]",      monocle },
-	{ "TTT",      bstack },
 };
 
 /* key definitions */
-#define MODKEY Mod4Mask
+#define MODKEY Mod1Mask
 #define TAGKEYS(KEY,TAG) \
 	{ MODKEY,                       KEY,      view,           {.ui = 1 << TAG} }, \
 	{ MODKEY|ControlMask,           KEY,      toggleview,     {.ui = 1 << TAG} }, \

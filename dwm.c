@@ -15,7 +15,7 @@
  *
  * Each child of the root window is called a client, except windows which have
  * set the override_redirect flag.  Clients are organized in a global
- * doubly-linked client list, the focus history is remembered through a global
+ * linked client list, the focus history is remembered through a global
  * stack list. Each client contains a bit array to indicate the tags of a
  * client.
  *
@@ -54,6 +54,8 @@
 #define MIN(a, b)               ((a) < (b) ? (a) : (b))
 #define MAXTAGLEN               16
 #define MOUSEMASK               (BUTTONMASK|PointerMotionMask)
+#define WIDTH(x)                ((x)->w + 2 * (x)->bw)
+#define HEIGHT(x)               ((x)->h + 2 * (x)->bw)
 #define NOBORDER(x)             ((x) - 2 * c->bw)
 #define TAGMASK                 ((int)((1LL << LENGTH(tags)) - 1))
 #define TEXTW(x)                (textnw(x, strlen(x)) + dc.font.height)
@@ -138,7 +140,7 @@ static void attachstack(Client *c);
 static void buttonpress(XEvent *e);
 static void checkotherwm(void);
 static void cleanup(void);
-static void clearurgent(void);
+static void clearurgent(Client *c);
 static void configure(Client *c);
 static void configurenotify(XEvent *e);
 static void configurerequest(XEvent *e);
@@ -369,20 +371,15 @@ cleanup(void) {
 }
 
 void
-clearurgent(void) {
+clearurgent(Client *c) {
 	XWMHints *wmh;
-	Client *c;
 
-	for(c = clients; c; c = c->next)
-		if(ISVISIBLE(c) && c->isurgent) {
-			c->isurgent = False;
-			if (!(wmh = XGetWMHints(dpy, c->win)))
-				continue;
-
-			wmh->flags &= ~XUrgencyHint;
-			XSetWMHints(dpy, c->win, wmh);
-			XFree(wmh);
-		}
+	c->isurgent = False;
+	if(!(wmh = XGetWMHints(dpy, c->win)))
+		return;
+	wmh->flags &= ~XUrgencyHint;
+	XSetWMHints(dpy, c->win, wmh);
+	XFree(wmh);
 }
 
 void
@@ -500,8 +497,7 @@ die(const char *errstr, ...) {
 
 void
 drawbar(void) {
-	int x, a= 0, s= 0;
-	char posbuf[10];
+	int x;
 	unsigned int i, occ = 0, urg = 0;
 	unsigned long *col;
 	Client *c;
@@ -527,19 +523,6 @@ drawbar(void) {
 	}
 	else
 		x = dc.x;
-	if(lt[sellt]->arrange == monocle){
-	  dc.x= x;
-	  for(c= nexttiled(clients), a= 0, s= 0; c; c= nexttiled(c->next), a++)
-	    if(c == stack)
-	      s= a;
-	  if(!s && a)
-	    s= a;
-	  snprintf(posbuf, LENGTH(posbuf), "[%d/%d]", s, a);
-	  dc.w= TEXTW(posbuf);
-	  drawtext(posbuf, dc.norm, False);
-	  x= dc.x + dc.w;
-	}
-	 
 	dc.w = TEXTW(stext);
 	dc.x = ww - dc.w;
 	if(dc.x < x) {
@@ -611,11 +594,11 @@ drawtext(const char *text, unsigned long col[ColLast], Bool invert) {
 
 void
 enternotify(XEvent *e) {
-    Client *c;
-    XCrossingEvent *ev = &e->xcrossing;
-   
-    if((ev->mode != NotifyNormal || ev->detail == NotifyInferior) && ev->window != root)
-        return;
+	Client *c;
+	XCrossingEvent *ev = &e->xcrossing;
+
+	if((ev->mode != NotifyNormal || ev->detail == NotifyInferior) && ev->window != root)
+		return;
 
     if(freemouse){
         if((c = getclient(ev->window)))
@@ -648,6 +631,8 @@ focus(Client *c) {
 		XSetWindowBorder(dpy, sel->win, dc.norm[ColBorder]);
 	}
 	if(c) {
+		if(c->isurgent)
+			clearurgent(c);
 		detachstack(c);
 		attachstack(c);
 		grabbuttons(c, True);
@@ -904,10 +889,10 @@ manage(Window w, XWindowAttributes *wa) {
 		c->bw = 0;
 	}
 	else {
-		if(c->x + c->w + 2 * c->bw > sx + sw)
-			c->x = sx + sw - NOBORDER(c->w);
-		if(c->y + c->h + 2 * c->bw > sy + sh)
-			c->y = sy + sh - NOBORDER(c->h);
+		if(c->x + WIDTH(c) > sx + sw)
+			c->x = sx + sw - WIDTH(c);
+		if(c->y + HEIGHT(c) > sy + sh)
+			c->y = sy + sh - HEIGHT(c);
 		c->x = MAX(c->x, sx);
 		/* only fix client y-offset, if the client center might cover the bar */
 		c->y = MAX(c->y, ((by == 0) && (c->x + (c->w / 2) >= wx) && (c->x + (c->w / 2) < wx + ww)) ? bh : sy);
@@ -971,7 +956,7 @@ monocle(void) {
 	Client *c;
 
 	for(c = nexttiled(clients); c; c = nexttiled(c->next))
-		resize(c, wx, wy, NOBORDER(ww), NOBORDER(wh), resizehints);
+		resize(c, wx, wy, ww - 2 * c->bw, wh - 2 * c->bw, resizehints);
 }
 
 void
@@ -991,6 +976,8 @@ movemouse(const Arg *arg) {
 	None, cursor[CurMove], CurrentTime) != GrabSuccess)
 		return;
 	XQueryPointer(dpy, root, &dummy, &dummy, &x, &y, &di, &di, &dui);
+	if(usegrab)
+		XGrabServer(dpy);
 	do {
 		XMaskEvent(dpy, MOUSEMASK|ExposureMask|SubstructureRedirectMask, &ev);
 		switch (ev.type) {
@@ -1000,19 +987,18 @@ movemouse(const Arg *arg) {
 			handler[ev.type](&ev);
 			break;
 		case MotionNotify:
-			XSync(dpy, False);
 			nx = ocx + (ev.xmotion.x - x);
 			ny = ocy + (ev.xmotion.y - y);
 			if(snap && nx >= wx && nx <= wx + ww
 			        && ny >= wy && ny <= wy + wh) {
 				if(abs(wx - nx) < snap)
 					nx = wx;
-				else if(abs((wx + ww) - (nx + c->w + 2 * c->bw)) < snap)
-					nx = wx + ww - NOBORDER(c->w);
+				else if(abs((wx + ww) - (nx + WIDTH(c))) < snap)
+					nx = wx + ww - WIDTH(c);
 				if(abs(wy - ny) < snap)
 					ny = wy;
-				else if(abs((wy + wh) - (ny + c->h + 2 * c->bw)) < snap)
-					ny = wy + wh - NOBORDER(c->h);
+				else if(abs((wy + wh) - (ny + HEIGHT(c))) < snap)
+					ny = wy + wh - HEIGHT(c);
 				if(!c->isfloating && lt[sellt]->arrange && (abs(nx - c->x) > snap || abs(ny - c->y) > snap))
 					togglefloating(NULL);
 			}
@@ -1022,6 +1008,8 @@ movemouse(const Arg *arg) {
 		}
 	}
 	while(ev.type != ButtonRelease);
+	if(usegrab)
+		XUngrabServer(dpy);
 	XUngrabPointer(dpy, CurrentTime);
 }
 
@@ -1120,9 +1108,9 @@ resize(Client *c, int x, int y, int w, int h, Bool sizehints) {
 	if(w <= 0 || h <= 0)
 		return;
 	if(x > sx + sw)
-		x = sw - NOBORDER(w);
+		x = sw - WIDTH(c);
 	if(y > sy + sh)
-		y = sh - NOBORDER(h);
+		y = sh - HEIGHT(c);
 	if(x + w + 2 * c->bw < sx)
 		x = sx;
 	if(y + h + 2 * c->bw < sy)
@@ -1164,6 +1152,8 @@ resizemouse(const Arg *arg) {
 	None, cursor[CurResize], CurrentTime) != GrabSuccess)
 		return;
 	XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w + c->bw - 1, c->h + c->bw - 1);
+	if(usegrab)
+		XGrabServer(dpy);
 	do {
 		XMaskEvent(dpy, MOUSEMASK|ExposureMask|SubstructureRedirectMask, &ev);
 		switch(ev.type) {
@@ -1173,9 +1163,8 @@ resizemouse(const Arg *arg) {
 			handler[ev.type](&ev);
 			break;
 		case MotionNotify:
-			XSync(dpy, False);
-			nw = MAX(ev.xmotion.x - NOBORDER(ocx) + 1, 1);
-			nh = MAX(ev.xmotion.y - NOBORDER(ocy) + 1, 1);
+			nw = MAX(ev.xmotion.x - ocx - 2*c->bw + 1, 1);
+			nh = MAX(ev.xmotion.y - ocy - 2*c->bw + 1, 1);
 
 			if(snap && nw >= wx && nw <= wx + ww
 			        && nh >= wy && nh <= wy + wh) {
@@ -1189,6 +1178,8 @@ resizemouse(const Arg *arg) {
 		}
 	}
 	while(ev.type != ButtonRelease);
+	if(usegrab)
+		XUngrabServer(dpy);
 	XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w + c->bw - 1, c->h + c->bw - 1);
 	XUngrabPointer(dpy, CurrentTime);
 	while(XCheckMaskEvent(dpy, EnterWindowMask, &ev));
@@ -1239,7 +1230,7 @@ run(void) {
 	sbuf[len] = stext[len] = '\0'; /* 0-terminator is never touched */
 	while(running) {
 		FD_ZERO(&rd);
-		if(readin && showbar)
+		if(readin)
 			FD_SET(STDIN_FILENO, &rd);
 		FD_SET(xfd, &rd);
 		if(select(xfd + 1, &rd, NULL, NULL, NULL) == -1) {
@@ -1482,7 +1473,7 @@ tile(void) {
 	/* master */
 	c = nexttiled(clients);
 	mw = mfact * ww;
-	resize(c, wx, wy, NOBORDER(n == 1 ? ww : mw), NOBORDER(wh), resizehints);
+	resize(c, wx, wy, (n == 1 ? ww : mw) - 2 * c->bw, wh - 2 * c->bw, resizehints);
 
 	if(--n == 0)
 		return;
@@ -1496,10 +1487,10 @@ tile(void) {
 		h = wh;
 
 	for(i = 0, c = nexttiled(c->next); c; c = nexttiled(c->next), i++) {
-		resize(c, x, y, NOBORDER(w), /* remainder */ ((i + 1 == n)
-		       ? NOBORDER(wy + wh) - y : h), resizehints);
+		resize(c, x, y, w - 2 * c->bw, /* remainder */ ((i + 1 == n)
+		       ? wy + wh - y - 2 * c->bw : h - 2 * c->bw), resizehints);
 		if(h != wh)
-			y = c->y + c->h + 2 * c->bw;
+			y = c->y + HEIGHT(c);
 	}
 }
 
@@ -1541,7 +1532,6 @@ toggleview(const Arg *arg) {
 
 	if(mask) {
 		tagset[seltags] = mask;
-		clearurgent();
 		arrange();
 	}
 }
@@ -1718,7 +1708,6 @@ view(const Arg *arg) {
 	seltags ^= 1; /* toggle sel tagset */
 	if(arg->ui & TAGMASK)
 		tagset[seltags] = arg->ui & TAGMASK;
-	clearurgent();
 	arrange();
 }
 
