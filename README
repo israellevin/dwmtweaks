@@ -1,3 +1,23 @@
+dwmtweaks - my own personal tweaking of dwm
+===========================================
+DWM is a brilliant minimalistic window manager, these are my tweaks for it,
+mostly configured for easy "sending" of clients to the TV in another room.
+
+Other changes are:
+
+My own implementation of smart borders - which means no borders when the
+client is on the TV and no borders when the client takes up most of the screen.
+
+Mouse locking - by default the mouse can't enter windows on the TV and works
+with click to focus. Focusing a client on the TV is likewise impossible. Press
+mod-a to free the mouse and have the focus follow it automatically.
+
+Displaying master area ration in the bar when it changes.
+
+Integrating bottom stack layout.
+
+Below is original README:
+
 dwm - dynamic window manager
 ============================
 dwm is an extremely fast, small, and dynamic window manager for X.
@@ -40,9 +60,10 @@ like this in your .xinitrc:
 
     while true
     do
-        echo `date` `uptime | sed 's/.*,//'`
+        xsetroot -name "`date` `uptime | sed 's/.*,//'`"
         sleep 1
-    done | dwm
+    done &
+    exec dwm
 
 
 Configuration

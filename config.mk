@@ -1,5 +1,5 @@
 # dwm version
-VERSION = 5.3.1
+VERSION = 5.4.1
 
 # Customize below to fit your system
 
@@ -10,7 +10,7 @@ MANPREFIX = ${PREFIX}/share/man
 X11INC = /usr/X11R6/include
 X11LIB = /usr/X11R6/lib
 
-# Xinerama, comment if you don't want it
+# Xinerama, un-comment if you want it
 XINERAMALIBS = -L${X11LIB} -lXinerama
 XINERAMAFLAGS = -DXINERAMA
 

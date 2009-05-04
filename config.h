@@ -12,9 +12,15 @@ static unsigned int borderpx        = 2;        /* border pixel of windows */
 static unsigned int snap            = 64;       /* snap pixel */
 static Bool showbar                 = False;    /* False means no bar */
 static Bool topbar                  = True;     /* False means bottom bar */
-static Bool readin                  = True;     /* False means do not read stdin */
 static Bool usegrab                 = False;    /* True means grabbing the X server
                                                    during mouse-based resizals */
+// Horizontally tiled layout
+static void htile(void);
+
+// TV hack sizes
+static int screensizex = 1920;
+static Bool freemouse = False;
+static Client *tvc = NULL;
 
 /* tagging */
 static const char tags[][MAXTAGLEN] = { "1", "2", "3" };
@@ -26,21 +32,15 @@ static Rule rules[] = {
 };
 
 /* layout(s) */
-static float mfact      = 0.66; /* factor of master area size [0.05..0.95] */
+static float mfact      = 0.85; /* factor of master area size [0.05..0.95] */
 static Bool resizehints = False; /* False means respect size hints in tiled resizals */
 
-#include "gaplessgrid.c"
-#include "fibonacci.c"
-#include "bstack.c"
 static Layout layouts[] = {
 	/* symbol     arrange function */
 	{ "[]=",      tile },    /* first entry is default */
+	{ "[O]",      monocle },
+	{ "[]|",      htile },
 	{ "><>",      NULL },    /* no layout function means floating behavior */
-	{ "[M]",      monocle },
-	{ "###",      gaplessgrid },
-    { "[@]",      spiral },
-    { "[\\]",     dwindle },
-    { "TTT",      bstack },
 };
 
 /* custom functions */
@@ -61,18 +61,20 @@ static void tv(const Arg *arg);
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
 
 /* commands */
-static const char *dmenucmd[] = { "dmenu_run", "-b", "-fn", "-*-terminus-*-*-*-*-64-*-*-*-*-*-*-*", "-nb", "#ff0000", "-nf", "#000000", "-sb", selbgcolor, "-sf", selfgcolor, NULL };
-static const char *termcmd[]  = { "urxvtcd", "-fade", "30", "-fg", "grey", "-bg", "black", "-cr", "green", "-fn", "-*-terminus-*-*-*-*-32-*-*-*-*-*-*-*", "-vb", "+sb", "-b", "0", "-w", "0", "--color12", "white", NULL };
+static const char *dmenucmd[] = { "dmenu_run", "-b", "-fn", "-*-terminus-*-*-*-*-32-*-*-*-*-*-*-*", "-nb", "#ff0000", "-nf", "#000000", "-sb", selbgcolor, "-sf", selfgcolor, NULL };
+static const char *termcmd[] = { "urxvtcd", "-fade", "30", "-fg", "grey", "-bg", "black", "-cr", "green", "-fn", "-*-terminus-*-*-*-*-32-*-*-*-*-*-*-*", "-vb", "+sb", "-b", "0", "-w", "0", "--color12", "white", NULL };
 static const char *termcmd2[]  = { "konsole", "--background-mode", NULL };
+static const char *krunnercmd[]  = { "krunner", NULL };
 static const char *looseendscmd[]  = { "bash", "/root/scripts/skill.sh", NULL };
  
 static Key keys[] = {
 	/* modifier                     key        function        argument */
 	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
 	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
-	{ MODKEY|ShiftMask|ControlMask, XK_Return, spawn,          {.v = termcmd2 } },
-	{ MODKEY,                       XK_b,      togglebar,      {0} },
+	{ MODKEY|ControlMask,	        XK_Return, spawn,          {.v = termcmd2 } },
+	{ ControlMask,	                XK_space,  spawn,          {.v = krunnercmd } },
 	{ MODKEY,                       XK_a,      togglefreemouse,{0} },
+	{ MODKEY,                       XK_b,      togglebar,      {0} },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
 	{ MODKEY,                       XK_h,      setmfact,       {.f = -0.05} },
@@ -82,16 +84,16 @@ static Key keys[] = {
 	{ MODKEY,	                    XK_c,      killclient,     {0} },
 	{ MODKEY,	                    XK_q,      killclient,     {0} },
 	{ MODKEY,                       XK_Right,  tv,             {.i = 0} },
-	{ MODKEY,                       XK_Right,  focusstack,     {.i = 0} },
+	{ MODKEY,                       XK_Right,  focusstack,     {.i = 1} },
 	{ MODKEY,                       XK_Left,   tv,             {.i = 1} },
 	{ MODKEY,                       XK_Down,   tv,             {.i = 2} },
 	{ MODKEY,                       XK_t,      setlayout,      {.v = &layouts[0]} },
-	{ MODKEY,                       XK_f,      setlayout,      {.v = &layouts[1]} },
-	{ MODKEY,                       XK_m,      setlayout,      {.v = &layouts[2]} },
-	{ MODKEY,                       XK_g,      setlayout,      {.v = &layouts[3]} },
-	{ MODKEY,                       XK_s,      setlayout,      {.v = &layouts[4]} },
-	{ MODKEY|ShiftMask,             XK_s,      setlayout,      {.v = &layouts[5]} },
-	{ MODKEY,                       XK_d,      setlayout,      {.v = &layouts[6]} },
+	{ MODKEY,                       XK_m,      setlayout,      {.v = &layouts[1]} },
+  	{ MODKEY,                       XK_d,      setlayout,      {.v = &layouts[2]} },
+	{ MODKEY,                       XK_f,      setlayout,      {.v = &layouts[3]} },
+//	{ MODKEY,                       XK_g,      setlayout,      {.v = &layouts[3]} },
+//	{ MODKEY,                       XK_s,      setlayout,      {.v = &layouts[4]} },
+//	{ MODKEY|ShiftMask,             XK_s,      setlayout,      {.v = &layouts[5]} },
 	{ MODKEY,                       XK_space,  setlayout,      {0} },
 	{ MODKEY|ShiftMask,             XK_space,  togglefloating, {0} },
 	{ MODKEY,                       XK_0,      view,           {.ui = ~0 } },
@@ -153,7 +155,7 @@ void tv(const Arg *arg) {
     }
     if(arg->i == 0 && oldsel && ISVISIBLE(oldsel)) {
         int x, y, w, h, nw, nh, ow, oh;
-        x = 1980 + 1000;
+        x = 1980 + 10;
         y = 25;
         w = nw = 925;
         h = nh = 710;
@@ -179,4 +181,37 @@ void tv(const Arg *arg) {
     }
     arrange();
     freemouse = oldmouse;
+}
+
+void htile(void) {
+       int x, y, h, w, mh;
+       unsigned int i, n;
+       Client *c;
+
+       for(n = 0, c = nexttiled(clients); c; c = nexttiled(c->next), n++);
+       if(n == 0)
+               return;
+
+       c = nexttiled(clients);
+       mh = mfact * wh;
+       adjustborder(c, n == 1 ? 0 : borderpx);
+       resize(c, wx, wy, ww - 2 * c->bw, (n == 1 ? wh : mh) - 2 * c->bw, resizehints);
+
+       if(--n == 0)
+               return;
+
+       x = wx;
+       y = (wy + mh > c->y + c->h) ? c->y + c->h + 2 * c->bw : wy + mh;
+       w = ww / n;
+       h = (wy + mh > c->y + c->h) ? wy + wh - y : wh - mh;
+       if(h < bh)
+               h = wh;
+
+       for(i = 0, c = nexttiled(c->next); c; c = nexttiled(c->next), i++) {
+               adjustborder(c, borderpx);
+               resize(c, x, y, ((i + 1 == n) ? wx + ww - x : w) - 2 * c->bw,
+                      h - 2 * c->bw, resizehints);
+               if(w != ww)
+                       x = c->x + WIDTH(c);
+       }
 }
