@@ -1,0 +1,13 @@
+***************
+*** 1,5 ****
+  # dmenu version
+- VERSION = 3.9
+  
+  # Customize below to fit your system
+  
+--- 1,5 ----
+  # dmenu version
++ VERSION = 3.9-vertical
+  
+  # Customize below to fit your system
+  
