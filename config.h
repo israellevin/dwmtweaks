@@ -65,6 +65,11 @@ static const char *dmenucmd[] = { "dmenu_run", "-b", "-fn", "-*-terminus-*-*-*-*
 static const char *termcmd[] = { "urxvtcd", "-fade", "30", "-fg", "grey", "-bg", "black", "-cr", "green", "-fn", "-*-terminus-*-*-*-*-32-*-*-*-*-*-*-*", "-vb", "+sb", "-b", "0", "-w", "0", "--color12", "white", NULL };
 static const char *termcmd2[]  = { "konsole", "--background-mode", NULL };
 static const char *krunnercmd[]  = { "krunner", NULL };
+static const char *volumeup[]  = { "bash", "/root/scripts/vol.sh", "1%+", NULL };
+static const char *volumedown[]  = { "bash", "/root/scripts/vol.sh", "1%-", NULL };
+static const char *volumemute[]  = { "bash", "/root/scripts/vol.sh", "toggle", NULL };
+static const char *vidplay[]  = { "bash", "/root/scripts/vidplay.sh", NULL };
+static const char *mpdplay[]  = { "bash", "/root/scripts/mpdplay.sh", NULL };
 static const char *looseendscmd[]  = { "bash", "/root/scripts/skill.sh", NULL };
  
 static Key keys[] = {
@@ -91,9 +96,6 @@ static Key keys[] = {
 	{ MODKEY,                       XK_m,      setlayout,      {.v = &layouts[1]} },
   	{ MODKEY,                       XK_d,      setlayout,      {.v = &layouts[2]} },
 	{ MODKEY,                       XK_f,      setlayout,      {.v = &layouts[3]} },
-//	{ MODKEY,                       XK_g,      setlayout,      {.v = &layouts[3]} },
-//	{ MODKEY,                       XK_s,      setlayout,      {.v = &layouts[4]} },
-//	{ MODKEY|ShiftMask,             XK_s,      setlayout,      {.v = &layouts[5]} },
 	{ MODKEY,                       XK_space,  setlayout,      {0} },
 	{ MODKEY|ShiftMask,             XK_space,  togglefloating, {0} },
 	{ MODKEY,                       XK_0,      view,           {.ui = ~0 } },
@@ -110,6 +112,11 @@ static Key keys[] = {
 	TAGKEYS(                        XK_9,                      8)
 	{ MODKEY|ShiftMask,             XK_q,      spawn,          {.v = looseendscmd } },
 	{ MODKEY|ShiftMask,             XK_q,      quit,           {0} },
+	{ AnyKey,	XF86XK_AudioRaiseVolume,	spawn,	{.v = volumeup } },
+	{ AnyKey,	XF86XK_AudioLowerVolume,	spawn,	{.v = volumedown } },
+	{ AnyKey,	XF86XK_AudioMute,	spawn,	{.v = volumemute } },
+	{ AnyKey,	XF86XK_Video,	spawn,	{.v = vidplay } },
+	{ AnyKey,	XF86XK_Music,	spawn,	{.v = mpdplay } },
 };
 
 /* button definitions */
