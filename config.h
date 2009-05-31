@@ -2,25 +2,27 @@
 
 /* appearance */
 static const char font[]            = "-*-terminus-*-*-*-*-24-*-*-*-*-*-*-*";
-static const char normbordercolor[] = "#bb0000";
+static const char normbordercolor[] = "#000000";
 static const char normbgcolor[]     = "#000000";
 static const char normfgcolor[]     = "#bbbbbb";
 static const char selbordercolor[]  = "#00ff00";
 static const char selbgcolor[]      = "#000000";
 static const char selfgcolor[]      = "#00ff00";
-static unsigned int borderpx        = 2;        /* border pixel of windows */
+static unsigned int borderpx        = 1;        /* border pixel of windows */
 static unsigned int snap            = 64;       /* snap pixel */
 static Bool showbar                 = False;    /* False means no bar */
 static Bool topbar                  = True;     /* False means bottom bar */
-static Bool usegrab                 = False;    /* True means grabbing the X server
-                                                   during mouse-based resizals */
+
 // Horizontally tiled layout
 static void htile(void);
 
-// TV hack sizes
-static int screensizex = 1920;
+// TV hack
 static Bool freemouse = False;
+static int screensizex = 1920;
+static int screensizey = 1200;
 static Client *tvc = NULL;
+static void togglefreemouse(const Arg *arg);
+static void tv(const Arg *arg);
 
 /* tagging */
 static const char tags[][MAXTAGLEN] = { "1", "2", "3" };
@@ -43,9 +45,6 @@ static Layout layouts[] = {
 	{ "><>",      NULL },    /* no layout function means floating behavior */
 };
 
-/* custom functions */
-static void togglefreemouse(const Arg *arg);
-static void tv(const Arg *arg);
 
 /* key definitions */
 #define MODKEY Mod4Mask
@@ -57,12 +56,18 @@ static void tv(const Arg *arg);
 	{ MODKEY|Mod1Mask,              KEY,      tag,            {.ui = 1 << TAG} }, \
 	{ MODKEY|Mod1Mask,              KEY,      view,           {.ui = 1 << TAG} },
 
+// For multimedia keys
+#include <X11/XF86keysym.h>
+
+// For keyboard layout handling
+#include <X11/XKBlib.h>
+
 /* helper for spawning shell commands in the pre dwm-5.0 fashion */
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
 
 /* commands */
 static const char *dmenucmd[] = { "dmenu_run", "-b", "-fn", "-*-terminus-*-*-*-*-32-*-*-*-*-*-*-*", "-nb", "#ff0000", "-nf", "#000000", "-sb", selbgcolor, "-sf", selfgcolor, NULL };
-static const char *termcmd[] = { "urxvtcd", "-fade", "30", "-fg", "grey", "-bg", "black", "-cr", "green", "-fn", "-*-terminus-*-*-*-*-32-*-*-*-*-*-*-*", "-vb", "+sb", "-b", "0", "-w", "0", "--color12", "white", NULL };
+static const char *termcmd[] = { "rxvt", "-fade", "30", "-fg", "grey", "-bg", "black", "-cr", "green", "-fn", "-*-terminus-*-*-*-*-32-*-*-*-*-*-*-*", "-vb", "+sb", "-b", "0", "-w", "0", "--color12", "white", NULL };
 static const char *termcmd2[]  = { "konsole", "--background-mode", NULL };
 static const char *krunnercmd[]  = { "krunner", NULL };
 static const char *volumeup[]  = { "bash", "/root/scripts/vol.sh", "1%+", NULL };
@@ -70,7 +75,6 @@ static const char *volumedown[]  = { "bash", "/root/scripts/vol.sh", "1%-", NULL
 static const char *volumemute[]  = { "bash", "/root/scripts/vol.sh", "toggle", NULL };
 static const char *vidplay[]  = { "bash", "/root/scripts/vidplay.sh", NULL };
 static const char *mpdplay[]  = { "bash", "/root/scripts/mpdplay.sh", NULL };
-static const char *looseendscmd[]  = { "bash", "/root/scripts/skill.sh", NULL };
  
 static Key keys[] = {
 	/* modifier                     key        function        argument */
@@ -88,19 +92,14 @@ static Key keys[] = {
 	{ MODKEY,                       XK_Tab,    view,           {0} },
 	{ MODKEY,	                    XK_c,      killclient,     {0} },
 	{ MODKEY,	                    XK_q,      killclient,     {0} },
-	{ MODKEY,                       XK_Right,  tv,             {.i = 0} },
-	{ MODKEY,                       XK_Right,  focusstack,     {.i = 1} },
-	{ MODKEY,                       XK_Left,   tv,             {.i = 1} },
-	{ MODKEY,                       XK_Down,   tv,             {.i = 2} },
 	{ MODKEY,                       XK_t,      setlayout,      {.v = &layouts[0]} },
 	{ MODKEY,                       XK_m,      setlayout,      {.v = &layouts[1]} },
-  	{ MODKEY,                       XK_d,      setlayout,      {.v = &layouts[2]} },
+	{ MODKEY,                       XK_d,      setlayout,      {.v = &layouts[2]} },
 	{ MODKEY,                       XK_f,      setlayout,      {.v = &layouts[3]} },
 	{ MODKEY,                       XK_space,  setlayout,      {0} },
 	{ MODKEY|ShiftMask,             XK_space,  togglefloating, {0} },
 	{ MODKEY,                       XK_0,      view,           {.ui = ~0 } },
 	{ MODKEY|ShiftMask,             XK_0,      tag,            {.ui = ~0 } },
-	{ MODKEY|ShiftMask|ControlMask, XK_0,      tag,            {.ui = ~0 } },
 	TAGKEYS(                        XK_1,                      0)
 	TAGKEYS(                        XK_2,                      1)
 	TAGKEYS(                        XK_3,                      2)
@@ -110,8 +109,11 @@ static Key keys[] = {
 	TAGKEYS(                        XK_7,                      6)
 	TAGKEYS(                        XK_8,                      7)
 	TAGKEYS(                        XK_9,                      8)
-	{ MODKEY|ShiftMask,             XK_q,      spawn,          {.v = looseendscmd } },
 	{ MODKEY|ShiftMask,             XK_q,      quit,           {0} },
+	{ MODKEY,                       XK_Right,  tv,             {.i = 0} },
+	{ MODKEY,                       XK_Right,  focusstack,     {.i = 1} },
+	{ MODKEY,                       XK_Left,   tv,             {.i = 1} },
+	{ MODKEY,                       XK_Down,   tv,             {.i = 2} },
 	{ AnyKey,	XF86XK_AudioRaiseVolume,	spawn,	{.v = volumeup } },
 	{ AnyKey,	XF86XK_AudioLowerVolume,	spawn,	{.v = volumedown } },
 	{ AnyKey,	XF86XK_AudioMute,	spawn,	{.v = volumemute } },
@@ -137,23 +139,61 @@ static Button buttons[] = {
 	{ ClkTagBar,            MODKEY,         Button3,        toggletag,      {0} },
 };
 
-static void togglefreemouse(const Arg *arg) {
-    freemouse = !freemouse;
+static void htile(void) {
+       int x, y, h, w, mh;
+       unsigned int i, n;
+       Client *c;
+
+       for(n = 0, c = nexttiled(clients); c; c = nexttiled(c->next), n++);
+       if(n == 0)
+               return;
+
+       /* master */
+       c = nexttiled(clients);
+       mh = mfact * wh;
+       resize(c, wx, wy, ww - 2 * c->bw, (n == 1 ? wh : mh) - 2 * c->bw);
+
+       if(--n == 0)
+               return;
+
+       /* tile stack */
+       x = wx;
+       y = (wy + mh > c->y + c->h) ? c->y + c->h + 2 * c->bw : wy + mh;
+       w = ww / n;
+       h = (wy + mh > c->y + c->h) ? wy + wh - y : wh - mh;
+       if(h < bh)
+               h = wh;
+
+       for(i = 0, c = nexttiled(c->next); c; c = nexttiled(c->next), i++) {
+               resize(c, x, y, ((i + 1 == n) ? wx + ww - x : w) - 2 * c->bw, h - 2 * c->bw);
+               if(w != ww)
+                       x = c->x + WIDTH(c);
+       }
 }
 
+void togglefreemouse(const Arg *arg) {
+    freemouse = !freemouse;
+    drawbar();
+}
+
+// Handles TV tiling
+// 0 means send to TV
+// 1 means retrieve from TV
+// 2 means retrieve from TV but keep afloat
 void tv(const Arg *arg) {
     Bool oldmouse = freemouse;
     Client *oldsel = sel;
 	XWindowAttributes wa;
 
     freemouse = True;
+
     if(tvc && ISVISIBLE(tvc)) {
         if((XGetWindowAttributes(dpy, tvc->win, &wa)) && (wa.map_state == IsViewable)) {
             if(arg->i == 2) {
-                resize(tvc, 0, 0, tvc->w, tvc->h, False);
+                resize(tvc, 0, 0, tvc->w, tvc->h);
             } else {
                 tvc->isfloating = False;
-                tvc->bw = borderpx;
+//                tvc->bw = borderpx;
                 tvc->tags = tagset[seltags];
             }
             focus(tvc);
@@ -181,44 +221,12 @@ void tv(const Arg *arg) {
         if(oh > 0) y += oh / 2;
 
         oldsel->isfloating = True;
-        oldsel->bw = 0;
+//        oldsel->bw = 0;
         oldsel->tags = TAGMASK;
-        resize(oldsel, x, y, nw, nh, False);
+        resize(oldsel, x, y, nw, nh);
         tvc = oldsel;
     }
     arrange();
     freemouse = oldmouse;
 }
 
-void htile(void) {
-       int x, y, h, w, mh;
-       unsigned int i, n;
-       Client *c;
-
-       for(n = 0, c = nexttiled(clients); c; c = nexttiled(c->next), n++);
-       if(n == 0)
-               return;
-
-       c = nexttiled(clients);
-       mh = mfact * wh;
-       adjustborder(c, n == 1 ? 0 : borderpx);
-       resize(c, wx, wy, ww - 2 * c->bw, (n == 1 ? wh : mh) - 2 * c->bw, resizehints);
-
-       if(--n == 0)
-               return;
-
-       x = wx;
-       y = (wy + mh > c->y + c->h) ? c->y + c->h + 2 * c->bw : wy + mh;
-       w = ww / n;
-       h = (wy + mh > c->y + c->h) ? wy + wh - y : wh - mh;
-       if(h < bh)
-               h = wh;
-
-       for(i = 0, c = nexttiled(c->next); c; c = nexttiled(c->next), i++) {
-               adjustborder(c, borderpx);
-               resize(c, x, y, ((i + 1 == n) ? wx + ww - x : w) - 2 * c->bw,
-                      h - 2 * c->bw, resizehints);
-               if(w != ww)
-                       x = c->x + WIDTH(c);
-       }
-}
