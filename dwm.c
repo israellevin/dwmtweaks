@@ -665,9 +665,25 @@ enternotify(XEvent *e) {
             focus(c);
         else
             focus(NULL);
-    } else {
-        if(ev->x_root > screensizex) {
-            XWarpPointer(dpy, root, root, 0, 0, 0, 0, screensizex, ev->y);
+
+    } else if (sel) {
+        if(
+            (ev->x_root > sel->x) &&
+            (ev->y_root > sel->y) &&
+            (ev->x_root < (sel->x + sel->w)) &&
+            (ev->y_root < (sel->y + sel->h))
+        ) return;
+        if(ignoreevent) ignoreevent = False;
+        else {
+            if(ev->x_root > 1900) {
+                ignoreevent = True;
+                XWarpPointer(dpy, None, sel->win, 0, 0, 0, 0, 0, 0);
+            }
+            XWarpPointer(
+                dpy, None, sel->win, 0, 0, 0, 0,
+                MAX(MIN(ev->x_root - sel->x, sel->w), 0),
+                MAX(MIN(ev->y_root - sel->y, sel->h), 0)
+            );
         }
     }
 }
@@ -696,6 +712,8 @@ focus(Client *c) {
 		grabbuttons(c, True);
 		XSetWindowBorder(dpy, c->win, dc.sel[ColBorder]);
 		XSetInputFocus(dpy, c->win, RevertToPointerRoot, CurrentTime);
+
+        if(!freemouse) XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w / 2, c->h / 2);
 	}
 	else
 		XSetInputFocus(dpy, root, RevertToPointerRoot, CurrentTime);

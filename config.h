@@ -18,6 +18,7 @@ static void htile(void);
 
 // TV hack
 static Bool freemouse = False;
+static Bool ignoreevent = False;
 static int screensizex = 1920;
 static int screensizey = 1200;
 static Client *tvc = NULL;
@@ -67,7 +68,7 @@ static Layout layouts[] = {
 
 /* commands */
 static const char *dmenucmd[] = { "dmenu_run", "-b", "-fn", "-*-terminus-*-*-*-*-32-*-*-*-*-*-*-*", "-nb", "#ff0000", "-nf", "#000000", "-sb", selbgcolor, "-sf", selfgcolor, NULL };
-static const char *termcmd[] = { "rxvt", "-fade", "30", "-fg", "grey", "-bg", "black", "-cr", "green", "-fn", "-*-terminus-*-*-*-*-32-*-*-*-*-*-*-*", "-vb", "+sb", "-b", "0", "-w", "0", "--color12", "white", NULL };
+static const char *termcmd[] = { "urxvtcd", "-fade", "30", "-fg", "grey", "-bg", "black", "-cr", "green", "-fn", "-*-terminus-*-*-*-*-32-*-*-*-*-*-*-*", "-vb", "+sb", "-b", "0", "-w", "0", "--color12", "white", NULL };
 static const char *termcmd2[]  = { "konsole", "--background-mode", NULL };
 static const char *krunnercmd[]  = { "krunner", NULL };
 static const char *volumeup[]  = { "bash", "/root/scripts/vol.sh", "1%+", NULL };
@@ -195,7 +196,6 @@ void tv(const Arg *arg) {
                 resize(tvc, 0, 0, tvc->w, tvc->h);
             } else {
                 tvc->isfloating = False;
-//                tvc->bw = borderpx;
                 tvc->tags = tagset[seltags];
             }
             focus(tvc);
@@ -223,7 +223,6 @@ void tv(const Arg *arg) {
         if(oh > 0) y += oh / 2;
 
         oldsel->isfloating = True;
-//        oldsel->bw = 0;
         oldsel->tags = TAGMASK;
         resize(oldsel, x, y, nw, nh);
         tvc = oldsel;
@@ -231,4 +230,3 @@ void tv(const Arg *arg) {
     arrange();
     freemouse = oldmouse;
 }
-
