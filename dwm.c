@@ -1132,6 +1132,10 @@ resize(Client *c, int x, int y, int w, int h) {
 		c->w = wc.width = w;
 		c->h = wc.height = h;
 		wc.border_width = c->bw;
+
+// Smart borders (not there when client is on TV or takes up most of screen)
+wc.border_width = ((c->x > screensizex) || ((c->w > (screensizex / 2)) && (c->h > (screensizey / 2)))) ? 0 : borderpx;
+
 		XConfigureWindow(dpy, c->win,
 				CWX|CWY|CWWidth|CWHeight|CWBorderWidth, &wc);
 		configure(c);
