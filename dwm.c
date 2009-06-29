@@ -665,14 +665,15 @@ enternotify(XEvent *e) {
             focus(c);
         else
             focus(NULL);
-
     } else if (sel) {
         if(
-            (ev->x_root > sel->x) &&
-            (ev->y_root > sel->y) &&
-            (ev->x_root < (sel->x + sel->w)) &&
-            (ev->y_root < (sel->y + sel->h))
+            (sel->x < ev->x_root ) &&
+            (sel->y < ev->y_root ) &&
+            ((sel->x + sel->w) > ev->x_root) &&
+            ((sel->y + sel->h) > ev->y_root)
         ) return;
+
+        // Ugly hack, but I am not enough of an xliber to do it otherwise
         if(ignoreevent) ignoreevent = False;
         else {
             if(ev->x_root > 1900) {
@@ -712,8 +713,6 @@ focus(Client *c) {
 		grabbuttons(c, True);
 		XSetWindowBorder(dpy, c->win, dc.sel[ColBorder]);
 		XSetInputFocus(dpy, c->win, RevertToPointerRoot, CurrentTime);
-
-        if(!freemouse) XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w / 2, c->h / 2);
 	}
 	else
 		XSetInputFocus(dpy, root, RevertToPointerRoot, CurrentTime);
@@ -972,11 +971,6 @@ manage(Window w, XWindowAttributes *wa) {
 	}
 
 	wc.border_width = c->bw;
-        // Smarter borders
-        wc.border_width = (
-            (c->x > screensizex) ||
-            ((c->w > screensizex / 2) && (c->h > screensizey / 2))
-        ) ? 0 : c->bw;
 	XConfigureWindow(dpy, w, CWBorderWidth, &wc);
 	XSetWindowBorder(dpy, w, dc.norm[ColBorder]);
 	configure(c); /* propagates border_width, if size doesn't change */
@@ -1137,13 +1131,7 @@ resize(Client *c, int x, int y, int w, int h) {
 		c->y = wc.y = y;
 		c->w = wc.width = w;
 		c->h = wc.height = h;
-
-        // Smarter borders
-        wc.border_width = (
-            (c->x > screensizex) ||
-            ((c->w > screensizex / 2) && (c->h > screensizey / 2))
-        ) ? 0 : c->bw;
-
+		wc.border_width = c->bw;
 		XConfigureWindow(dpy, c->win,
 				CWX|CWY|CWWidth|CWHeight|CWBorderWidth, &wc);
 		configure(c);
@@ -1504,11 +1492,6 @@ unmanage(Client *c) {
 	XWindowChanges wc;
 
 	wc.border_width = c->oldbw;
-        // Smarter borders
-        wc.border_width = (
-            (c->x > screensizex) ||
-            ((c->w > screensizex / 2) && (c->h > screensizey / 2))
-        ) ? 0 : c->bw;
 	/* The server grab construct avoids race conditions. */
 	XGrabServer(dpy);
 	XSetErrorHandler(xerrordummy);

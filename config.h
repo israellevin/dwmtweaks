@@ -36,7 +36,7 @@ static Rule rules[] = {
 
 /* layout(s) */
 static float mfact      = 0.85; /* factor of master area size [0.05..0.95] */
-static Bool resizehints = False; /* False means respect size hints in tiled resizals */
+static Bool resizehints = True; /* False means respect size hints in tiled resizals */
 
 static Layout layouts[] = {
 	/* symbol     arrange function */
@@ -68,7 +68,7 @@ static Layout layouts[] = {
 
 /* commands */
 static const char *dmenucmd[] = { "dmenu_run", "-b", "-fn", "-*-terminus-*-*-*-*-32-*-*-*-*-*-*-*", "-nb", "#ff0000", "-nf", "#000000", "-sb", selbgcolor, "-sf", selfgcolor, NULL };
-static const char *termcmd[] = { "urxvtcd", "-fade", "30", "-fg", "grey", "-bg", "black", "-cr", "green", "-fn", "-*-terminus-*-*-*-*-32-*-*-*-*-*-*-*", "-vb", "+sb", "-b", "0", "-w", "0", "--color12", "white", NULL };
+static const char *termcmd[] = { "urxvt", "-fade", "30", "-fg", "grey", "-bg", "black", "-cr", "green", "-fn", "-*-terminus-*-*-*-*-32-*-*-*-*-*-*-*", "-vb", "+sb", "-b", "0", "-w", "0", "--color12", "white", NULL };
 static const char *termcmd2[]  = { "konsole", "--background-mode", NULL };
 static const char *krunnercmd[]  = { "krunner", NULL };
 static const char *volumeup[]  = { "bash", "/root/scripts/vol.sh", "1%+", NULL };
@@ -76,6 +76,9 @@ static const char *volumedown[]  = { "bash", "/root/scripts/vol.sh", "1%-", NULL
 static const char *volumemute[]  = { "bash", "/root/scripts/vol.sh", "toggle", NULL };
 static const char *vidplay[]  = { "bash", "/root/scripts/vidplay.sh", NULL };
 static const char *mpdplay[]  = { "bash", "/root/scripts/mpdplay.sh", NULL };
+static const char *uzblcmd[] = { "uzbl", "-c", "/root/.config/uzbl/uzbl", NULL };
+static const char *gmalcmd[] = { "uzbl", "-c", "/root/.config/uzbl/uzbl", "-u", "http://mail.google.com", NULL };
+static const char *gcalcmd[] = { "uzbl", "-c", "/root/.config/uzbl/uzbl", "-u", "http://www.google.com/calendar/render", NULL };
  
 static Key keys[] = {
 	/* modifier                     key        function        argument */
@@ -83,6 +86,7 @@ static Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
 	{ MODKEY|ControlMask,	        XK_Return, spawn,          {.v = termcmd2 } },
 	{ ControlMask,	                XK_space,  spawn,          {.v = krunnercmd } },
+	{ MODKEY,                       XK_u,      spawn,          {.v = uzblcmd } },
 	{ MODKEY,                       XK_a,      togglefreemouse,{0} },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
@@ -130,9 +134,14 @@ static Key keys[] = {
 static Button buttons[] = {
 	/* click                event mask      button          function        argument */
 	{ ClkLtSymbol,          0,              Button1,        setlayout,      {0} },
-	{ ClkLtSymbol,          0,              Button3,        setlayout,      {.v = &layouts[2]} },
+	{ ClkLtSymbol,          0,              Button2,        togglefreemouse,{0} },
+	{ ClkLtSymbol,          0,              Button3,        setlayout,      {.v = &layouts[1]} },
+//	{ ClkWinTitle,          0,              Button1,        spawn,          {.v = termcmd } },
 	{ ClkWinTitle,          0,              Button2,        zoom,           {0} },
-	{ ClkStatusText,        0,              Button2,        spawn,          {.v = termcmd } },
+	{ ClkWinTitle,          0,              Button3,        spawn,          {.v = termcmd } },
+	{ ClkRootWin,           0,              Button1,        spawn,          {.v = termcmd } },
+	{ ClkRootWin,           0,              Button2,        spawn,          {.v = volumemute } },
+	{ ClkRootWin,           0,              Button3,        spawn,          {.v = uzblcmd } },
 	{ ClkClientWin,         MODKEY,         Button1,        movemouse,      {0} },
 	{ ClkClientWin,         MODKEY,         Button2,        togglefloating, {0} },
 	{ ClkClientWin,         MODKEY,         Button3,        resizemouse,    {0} },
@@ -140,6 +149,9 @@ static Button buttons[] = {
 	{ ClkTagBar,            0,              Button3,        toggleview,     {0} },
 	{ ClkTagBar,            MODKEY,         Button1,        tag,            {0} },
 	{ ClkTagBar,            MODKEY,         Button3,        toggletag,      {0} },
+	{ ClkStatusText,        0,              Button1,        spawn,          {.v = gmalcmd } },
+	{ ClkStatusText,        0,              Button2,        spawn,          {.v = uzblcmd } },
+	{ ClkStatusText,        0,              Button3,        spawn,          {.v = gcalcmd } },
 };
 
 static void htile(void) {
@@ -229,4 +241,5 @@ void tv(const Arg *arg) {
     }
     arrange();
     freemouse = oldmouse;
+    drawbar();
 }
