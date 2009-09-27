@@ -16,17 +16,13 @@ static const Bool topbar            = True;     /* False means bottom bar */
 // Horizontally tiled layout
 static void htile(Monitor *m);
 
-// Mouse confinement hack
-static Bool freemouse = False;
-static Bool ignoreevent = False;
-static void togglefreemouse(const Arg *arg);
-
 /* tagging */
 static const char *tags[] = { "1", "2", "3" };
 
 static const Rule rules[] = {
 	/* class      instance    title       tags mask     isfloating   monitor */
 	{ "MPlayer",  NULL,       NULL,       1 << 8,       False,       1 },
+	{ "SMPlayer",  NULL,       NULL,       1 << 8,       False,       1 },
 };
 
 /* layout(s) */
@@ -81,7 +77,6 @@ static Key keys[] = {
 	{ MODKEY|ControlMask,	        XK_Return, spawn,          {.v = termcmd2 } },
 	{ ControlMask,	                XK_space,  spawn,          {.v = krunnercmd } },
 	{ MODKEY,                       XK_u,      spawn,          {.v = uzblcmd } },
-	{ MODKEY,                       XK_a,      togglefreemouse,{0} },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
@@ -123,19 +118,13 @@ static Key keys[] = {
 };
 
 /* button definitions */
-/* click can be a tag number (starting at 0),
- * ClkLtSymbol, ClkStatusText, ClkWinTitle, ClkClientWin, or ClkRootWin */
+/* click can be ClkLtSymbol, ClkStatusText, ClkWinTitle, ClkClientWin, or ClkRootWin */
 static Button buttons[] = {
 	/* click                event mask      button          function        argument */
 	{ ClkLtSymbol,          0,              Button1,        setlayout,      {0} },
-	{ ClkLtSymbol,          0,              Button2,        togglefreemouse,{0} },
 	{ ClkLtSymbol,          0,              Button3,        setlayout,      {.v = &layouts[1]} },
-//	{ ClkWinTitle,          0,              Button1,        spawn,          {.v = termcmd } },
 	{ ClkWinTitle,          0,              Button2,        zoom,           {0} },
-	{ ClkWinTitle,          0,              Button3,        spawn,          {.v = termcmd } },
-//	{ ClkRootWin,           0,              Button1,        spawn,          {.v = termcmd } },
-	{ ClkRootWin,           0,              Button2,        spawn,          {.v = volumemute } },
-	{ ClkRootWin,           0,              Button3,        spawn,          {.v = uzblcmd } },
+	{ ClkStatusText,        0,              Button2,        spawn,          {.v = termcmd } },
 	{ ClkClientWin,         MODKEY,         Button1,        movemouse,      {0} },
 	{ ClkClientWin,         MODKEY,         Button2,        togglefloating, {0} },
 	{ ClkClientWin,         MODKEY,         Button3,        resizemouse,    {0} },
@@ -175,9 +164,4 @@ htile(Monitor *m) {
         if(w != m->ww)
             x = c->x + WIDTH(c);
     }
-}
-
-void togglefreemouse(const Arg *arg) {
-    freemouse = !freemouse;
-    drawbars();
 }
