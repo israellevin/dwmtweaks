@@ -1,3 +1,21 @@
+dwmtweaks - my own personal tweaking of dwm
+===========================================
+DWM is a brilliant minimalistic window manager, these are my tweaks for it.
+I started this out mostly for easy "sending" of clients to the TV in the
+other room, but as of 5.6 DWM is doing most of the work for me. Yay DWM!
+
+Current changes:
+* My own implementation of smart borders - which means no borders when the
+  client takes up most of the screen
+* Stopping focus from following mouse out of the monitor
+* Focus does not follow mouse out of monitor
+* Fix for an unclutter related bug
+* Integrating bottom stack layout in config.h
+* Compensation for my video card's overscan on the TV
+* Some other personal cosmetics
+
+Below is original README:
+
 dwm - dynamic window manager
 ============================
 dwm is an extremely fast, small, and dynamic window manager for X.
