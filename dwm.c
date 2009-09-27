@@ -1755,9 +1755,9 @@ updategeom(void) {
             // My TV dimensions, to compensate for overscan, becasue nvidia's binaries suck
             if(i == 1) {
                 m->mx = m->wx = 1985;
-                m->my = m->wy = 26;
-                m->mw = m->ww = 945;
-                m->mh = m->wh = 737;
+                m->my = m->wy = 30;
+                m->mw = m->ww = 920;
+                m->mh = m->wh = 700;
             }
 
 		}

@@ -31,7 +31,7 @@ static const Rule rules[] = {
 
 /* layout(s) */
 static const float mfact      = 0.85; /* factor of master area size [0.05..0.95] */
-static const Bool resizehints = True; /* False means respect size hints in tiled resizals */
+static const Bool resizehints = False; /* False means respect size hints in tiled resizals */
 
 static const Layout layouts[] = {
 	/* symbol     arrange function */
@@ -133,7 +133,7 @@ static Button buttons[] = {
 //	{ ClkWinTitle,          0,              Button1,        spawn,          {.v = termcmd } },
 	{ ClkWinTitle,          0,              Button2,        zoom,           {0} },
 	{ ClkWinTitle,          0,              Button3,        spawn,          {.v = termcmd } },
-	{ ClkRootWin,           0,              Button1,        spawn,          {.v = termcmd } },
+//	{ ClkRootWin,           0,              Button1,        spawn,          {.v = termcmd } },
 	{ ClkRootWin,           0,              Button2,        spawn,          {.v = volumemute } },
 	{ ClkRootWin,           0,              Button3,        spawn,          {.v = uzblcmd } },
 	{ ClkClientWin,         MODKEY,         Button1,        movemouse,      {0} },
