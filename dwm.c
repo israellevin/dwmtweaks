@@ -791,6 +791,9 @@ drawtext(const char *text, unsigned long col[ColLast], Bool invert) {
 
 void
 enternotify(XEvent *e) {
+    // I don't really want focus to be influenced by mere mouse movements
+    return;
+
 	Client *c;
 	Monitor *m;
 	XCrossingEvent *ev = &e->xcrossing;
@@ -798,7 +801,6 @@ enternotify(XEvent *e) {
 	if((ev->mode != NotifyNormal || ev->detail == NotifyInferior) && ev->window != root)
 		return;
 	if((m = wintomon(ev->window)) && m != selmon) {
-
         // Don't change focused monitor on mouse move
         return;
 
@@ -807,12 +809,14 @@ enternotify(XEvent *e) {
 	}
 	if((c = wintoclient(ev->window)))
 		focus(c);
+	else {
+        // When enternotify is called and the pointer is hidden by unclutter
+        // we get no client, and if we focus NULL we get another enternotify
+        // and the pointer is still hidden, which means infinite loop
+        return;
 
-    // When enternotify is called and the pointer is hidden by unclutter
-    // we get no client, and if we focus NULL we get another enternotify
-    // and the pointer is still hidden, which means infinite loop
-	//else
-	//	focus(NULL);
+		focus(NULL);
+    }
 }
 
 void
@@ -828,7 +832,8 @@ void
 focus(Client *c) {
 	if(!c || !ISVISIBLE(c))
 		for(c = selmon->stack; c && !ISVISIBLE(c); c = c->snext);
-	if(selmon->sel)
+    // quick fix http://lists.suckless.org/dev/0912/2687.html
+	//if(selmon->sel)
 		unfocus(selmon->sel);
 	if(c) {
 		if(c->mon != selmon)
