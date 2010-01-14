@@ -17,7 +17,6 @@ static const Bool topbar            = True;     /* False means bottom bar */
 static void htile(Monitor *m);
 
 // TV hack
-static Client *tvc = NULL;
 static void totv(const Arg *arg);
 static void fromtv(const Arg *arg);
 
@@ -61,10 +60,10 @@ static const Layout layouts[] = {
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
 
 /* commands */
-static const char *dmenucmd[] = { "dmenu_run", "-b", "-fn", "-*-terminus-*-*-*-*-32-*-*-*-*-*-*-*", "-nb", "#ff0000", "-nf", "#000000", "-sb", selbgcolor, "-sf", selfgcolor, NULL };
+static const char *dmenucmd[] = { "dmenu_run", "-i", "-fn", "-*-terminus-*-*-*-*-50-*-*-*-*-*-*-*", "-nb", normbgcolor, "-nf", normfgcolor, "-sb", selbgcolor, "-sf", selfgcolor, "-xs", "-l", "10", "-c", "-rs", NULL };
 static const char *termcmd[] = { "urxvtcd", "-fade", "30", "-fg", "grey", "-bg", "black", "-cr", "green", "-fn", "-*-terminus-*-*-*-*-32-*-*-*-*-*-*-*", "-vb", "+sb", "-b", "0", "-w", "0", "--color12", "white", NULL };
-static const char *termcmd2[]  = { "konsole", "--background-mode", NULL };
-static const char *krunnercmd[]  = { "krunner", NULL };
+static const char *eject[]  = { "bash", "/root/scripts/dmntnir.sh", NULL };
+static const char *escflash[]  = { "bash", "/root/scripts/escflash.sh", NULL };
 static const char *volumeup[]  = { "bash", "/root/scripts/vol.sh", "1%+", NULL };
 static const char *volumedown[]  = { "bash", "/root/scripts/vol.sh", "1%-", NULL };
 static const char *volumemute[]  = { "bash", "/root/scripts/vol.sh", "toggle", NULL };
@@ -79,8 +78,6 @@ static Key keys[] = {
 	/* modifier                     key        function        argument */
 	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
 	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
-	{ MODKEY|ControlMask,           XK_Return, spawn,          {.v = termcmd2 } },
-	{ ControlMask,                  XK_space,  spawn,          {.v = krunnercmd } },
 	{ MODKEY,                       XK_u,      spawn,          {.v = uzblcmd } },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
@@ -120,12 +117,14 @@ static Key keys[] = {
     { MODKEY,                       XK_Right,  totv,           {.i = 0} },
     { MODKEY,                       XK_Left,   fromtv,         {.i = 0} },
     { MODKEY,                       XK_Down,   fromtv,         {.i = 1} },
-	{ AnyKey,	XF86XK_AudioRaiseVolume,	spawn,	{.v = volumeup } },
-	{ AnyKey,	XF86XK_AudioLowerVolume,	spawn,	{.v = volumedown } },
-	{ AnyKey,	XF86XK_AudioMute,	spawn,	{.v = volumemute } },
-	{ AnyKey,	XF86XK_AudioPlay,	spawn,	{.v = toggleplay } },
-	{ AnyKey,	XF86XK_Video,	spawn,	{.v = vidplay } },
-	{ AnyKey,	XF86XK_Music,	spawn,	{.v = mpdplay } },
+	{ MODKEY,                       XK_Up,     spawn,          {.v = escflash } },
+	{ AnyKey,                       XF86XK_Eject, spawn, {.v = eject } },
+	{ AnyKey,                       XF86XK_AudioRaiseVolume, spawn, {.v = volumeup } },
+	{ AnyKey,                       XF86XK_AudioLowerVolume, spawn, {.v = volumedown } },
+	{ AnyKey,                       XF86XK_AudioMute, spawn, {.v = volumemute } },
+	{ AnyKey,                       XF86XK_AudioPlay, spawn, {.v = toggleplay } },
+	{ AnyKey,                       XF86XK_Video, spawn, {.v = vidplay } },
+	{ AnyKey,                       XF86XK_Music, spawn, {.v = mpdplay } },
 };
 
 /* button definitions */
@@ -178,32 +177,30 @@ htile(Monitor *m) {
 }
 
 void fromtv(const Arg *arg) {
-    if(tvc && ISVISIBLE(tvc)) {
+	Client *c;
+	for(c = mons->next->clients; c; c = c->next) {
         if(arg->i == 1) {
             XWindowAttributes wa;
-            if((XGetWindowAttributes(dpy, tvc->win, &wa)) && (wa.map_state == IsViewable)){
-                tvc->isfloating = True;
-                resize(tvc, 0, 0, tvc->w, tvc->h, False);
-                sendmon(tvc, mons);
-                focus(tvc);
-                tvc = NULL;
+            if((XGetWindowAttributes(dpy, c->win, &wa)) && (wa.map_state == IsViewable)){
+                c->isfloating = True;
+                resize(c, 0, 0, c->w, c->h, False);
+                sendmon(c, mons);
+                focus(c);
             }
         }
         else {
-            tvc->isfloating = False;
-            sendmon(tvc, mons);
-            tvc = NULL;
+            c->isfloating = False;
+            sendmon(c, mons);
         }
     }
 }
 
 void totv(const Arg *arg) {
-    Client *oldsel = mons->sel;
-    if(oldsel && ISVISIBLE(oldsel)) {
+	Client *c = mons->sel;
+    if(c && ISVISIBLE(c)) {
         Arg arg = {0};
         arg.i = 0;
         fromtv(&arg);
-        sendmon(oldsel, mons->next);
-        tvc = oldsel;
+        sendmon(c, mons->next);
     }
 }

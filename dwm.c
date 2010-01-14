@@ -833,7 +833,7 @@ focus(Client *c) {
 	if(!c || !ISVISIBLE(c))
 		for(c = selmon->stack; c && !ISVISIBLE(c); c = c->snext);
     // quick fix http://lists.suckless.org/dev/0912/2687.html
-	//if(selmon->sel)
+	if(selmon->sel)
 		unfocus(selmon->sel);
 	if(c) {
 		if(c->mon != selmon)
