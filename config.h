@@ -61,18 +61,19 @@ static const Layout layouts[] = {
 
 /* commands */
 static const char *dmenucmd[] = { "dmenu_run", "-i", "-fn", "-*-terminus-*-*-*-*-50-*-*-*-*-*-*-*", "-nb", normbgcolor, "-nf", normfgcolor, "-sb", selbgcolor, "-sf", selfgcolor, "-xs", "-l", "10", "-c", "-rs", NULL };
-static const char *termcmd[] = { "urxvtcd", "-fade", "30", "-fg", "grey", "-bg", "black", "-cr", "green", "-fn", "-*-terminus-*-*-*-*-32-*-*-*-*-*-*-*", "-vb", "+sb", "-b", "0", "-w", "0", "--color12", "white", NULL };
+static const char *termcmd[] = { "urxvtcd", NULL };
 static const char *eject[]  = { "bash", "/root/scripts/dmntnir.sh", NULL };
 static const char *escflash[]  = { "bash", "/root/scripts/escflash.sh", NULL };
 static const char *volumeup[]  = { "bash", "/root/scripts/vol.sh", "1%+", NULL };
 static const char *volumedown[]  = { "bash", "/root/scripts/vol.sh", "1%-", NULL };
 static const char *volumemute[]  = { "bash", "/root/scripts/vol.sh", "toggle", NULL };
 static const char *toggleplay[]  = { "bash", "/root/scripts/anyremote.sh", "pause", NULL };
-static const char *vidplay[]  = { "bash", "/root/scripts/vidplay.sh", NULL };
+static const char *vidplay[]  = { "bash", "/root/scripts/svidplay.sh", NULL };
 static const char *mpdplay[]  = { "bash", "/root/scripts/mpdplay.sh", NULL };
-static const char *uzblcmd[] = { "uzbl-browser", NULL };
-static const char *gmalcmd[] = { "uzbl-browser", "-u", "http://mail.google.com", NULL };
-static const char *gcalcmd[] = { "uzbl-browser", "-u", "http://www.google.com/calendar/render", NULL };
+static const char *comix[]  = { "bash", "/root/scripts/comix.sh", NULL };
+static const char *uzblcmd[] = { "bash", "/root/scripts/runuzbl.sh", NULL };
+static const char *gmalcmd[] = { "bash", "/root/scripts/runuzbl.sh", "http://mail.google.com", NULL };
+static const char *gcalcmd[] = { "bash", "/root/scripts/runuzbl.sh", "http://www.google.com/calendar/render", NULL };
  
 static Key keys[] = {
 	/* modifier                     key        function        argument */
@@ -125,6 +126,7 @@ static Key keys[] = {
 	{ AnyKey,                       XF86XK_AudioPlay, spawn, {.v = toggleplay } },
 	{ AnyKey,                       XF86XK_Video, spawn, {.v = vidplay } },
 	{ AnyKey,                       XF86XK_Music, spawn, {.v = mpdplay } },
+	{ AnyKey,                       XF86XK_Pictures, spawn, {.v = comix } },
 };
 
 /* button definitions */
@@ -176,9 +178,12 @@ htile(Monitor *m) {
     }
 }
 
-void fromtv(const Arg *arg) {
+static void
+fromtv(const Arg *arg) {
 	Client *c;
-	for(c = mons->next->clients; c; c = c->next) {
+    int i;
+	for(i = 0, c = mons->next->clients; c; i++, c = mons->next->clients) {
+        sendmon(c, mons);
         if(arg->i == 1) {
             XWindowAttributes wa;
             if((XGetWindowAttributes(dpy, c->win, &wa)) && (wa.map_state == IsViewable)){
@@ -189,13 +194,15 @@ void fromtv(const Arg *arg) {
             }
         }
         else {
+            // Maybe keep it floating and use hard coded size?
             c->isfloating = False;
             sendmon(c, mons);
         }
     }
 }
 
-void totv(const Arg *arg) {
+static void
+totv(const Arg *arg) {
 	Client *c = mons->sel;
     if(c && ISVISIBLE(c)) {
         Arg arg = {0};
