@@ -18,6 +18,7 @@ static void htile(Monitor *m);
 
 // Attachaside flag
 static Bool ataside           = False;
+static Bool focaside          = False;
 static void toggleaside();
 
 /* tagging */

@@ -292,6 +292,36 @@ keyrelease(XEvent *e) {
 }
 
 void
+combotag(const Arg *arg) {
+	if(selmon->sel && arg->ui & TAGMASK) {
+		if (combo) {
+			selmon->sel->tags |= arg->ui & TAGMASK;
+		} else {
+			combo = 1;
+			selmon->sel->tags = arg->ui & TAGMASK;
+		}
+		arrange(selmon);
+	}
+}
+
+void
+comboview(const Arg *arg) {
+	unsigned newtags = arg->ui & TAGMASK;
+	if (combo) {
+		selmon->tagset[selmon->seltags] |= newtags;
+	} else {
+		selmon->seltags ^= 1;	/*toggle tagset*/
+		combo = 1;
+		if (newtags)
+			selmon->tagset[selmon->seltags] = newtags;
+	}
+	arrange(selmon);
+}
+
+
+
+
+void
 applyrules(Client *c) {
 	const char *class, *instance;
 	unsigned int i;
@@ -426,6 +456,7 @@ attach(Client *c) {
         }
         c->next = at->next;
         at->next = c;
+        focaside = True;
     }
     else {
         c->next = c->mon->clients;
@@ -435,8 +466,20 @@ attach(Client *c) {
 
 void
 attachstack(Client *c) {
-	c->snext = c->mon->stack;
-	c->mon->stack = c;
+    // Attachaside if flag
+    if(focaside) {
+        focaside = False;
+        if(c->mon->stack && c->mon->stack->snext) {
+            c->snext = c->mon->stack->snext;
+            c->mon->stack->snext = c;
+            return;
+        }
+        attachstack(c);
+    }
+    else {
+        c->snext = c->mon->stack;
+        c->mon->stack = c;
+    }
 }
 
 void
