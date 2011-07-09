@@ -8,7 +8,7 @@ static const char normfgcolor[]     = "#bbbbbb";
 static const char selbordercolor[]  = "#00ff00";
 static const char selbgcolor[]      = "#000000";
 static const char selfgcolor[]      = "#00ff00";
-static const unsigned int borderpx  = 1;        /* border pixel of windows */
+static const unsigned int borderpx  = 0;        /* border pixel of windows */
 static const unsigned int snap      = 64;       /* snap pixel */
 static const Bool showbar           = True;     /* False means no bar */
 static const Bool topbar            = True;     /* False means bottom bar */
@@ -16,12 +16,12 @@ static const Bool topbar            = True;     /* False means bottom bar */
 // Horizontally tiled layout
 static void htile(Monitor *m);
 
-// TV hack
-static void totv(const Arg *arg);
-static void fromtv(const Arg *arg);
+// Attachaside flag
+static Bool ataside           = False;
+static void toggleaside();
 
 /* tagging */
-static const char *tags[] = { "1", "2", "3" };
+static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
 
 static const Rule rules[] = {
 	/* class      instance    title       tags mask     isfloating   monitor */
@@ -30,7 +30,7 @@ static const Rule rules[] = {
 
 /* layout(s) */
 static const float mfact      = 0.85; /* factor of master area size [0.05..0.95] */
-static const Bool resizehints = True; /* False means respect size hints in tiled resizals */
+static const Bool resizehints = False; /* False means respect size hints in tiled resizals */
 
 static const Layout layouts[] = {
 	/* symbol     arrange function */
@@ -43,9 +43,9 @@ static const Layout layouts[] = {
 /* key definitions */
 #define MODKEY Mod4Mask
 #define TAGKEYS(KEY,TAG) \
-	{ MODKEY,                       KEY,      view,           {.ui = 1 << TAG} }, \
+	{ MODKEY,                       KEY,      view,      {.ui = 1 << TAG} }, \
 	{ MODKEY|ControlMask,           KEY,      toggleview,     {.ui = 1 << TAG} }, \
-	{ MODKEY|ShiftMask,             KEY,      tag,            {.ui = 1 << TAG} }, \
+	{ MODKEY|ShiftMask,             KEY,      tag,       {.ui = 1 << TAG} }, \
 	{ MODKEY|ControlMask|ShiftMask, KEY,      toggletag,      {.ui = 1 << TAG} }, \
 	{ MODKEY|Mod1Mask,              KEY,      tag,            {.ui = 1 << TAG} }, \
 	{ MODKEY|Mod1Mask,              KEY,      view,           {.ui = 1 << TAG} },
@@ -61,7 +61,8 @@ static const Layout layouts[] = {
 
 /* commands */
 static const char *dmenucmd[] = { "dmenu_run", "-i", "-fn", "-*-terminus-*-*-*-*-50-*-*-*-*-*-*-*", "-nb", normbgcolor, "-nf", normfgcolor, "-sb", selbgcolor, "-sf", selfgcolor, "-xs", "-l", "10", "-c", "-rs", NULL };
-static const char *termcmd[] = { "urxvtcd", NULL };
+static const char *termcmd[] = { "bash", "/root/scripts/term.sh", NULL };
+static const char *alltermscmd[] = { "bash", "/root/scripts/allterms.sh", NULL };
 static const char *eject[]  = { "bash", "/root/scripts/dmntnir.sh", NULL };
 static const char *escflash[]  = { "bash", "/root/scripts/escflash.sh", NULL };
 static const char *volumeup[]  = { "bash", "/root/scripts/vol.sh", "1%+", NULL };
@@ -71,15 +72,18 @@ static const char *toggleplay[]  = { "bash", "/root/scripts/anyremote.sh", "paus
 static const char *vidplay[]  = { "bash", "/root/scripts/svidplay.sh", NULL };
 static const char *mpdplay[]  = { "bash", "/root/scripts/mpdplay.sh", NULL };
 static const char *comix[]  = { "bash", "/root/scripts/comix.sh", NULL };
-static const char *uzblcmd[] = { "bash", "/root/scripts/runuzbl.sh", NULL };
-static const char *gmalcmd[] = { "bash", "/root/scripts/runuzbl.sh", "http://mail.google.com", NULL };
-static const char *gcalcmd[] = { "bash", "/root/scripts/runuzbl.sh", "http://www.google.com/calendar/render", NULL };
+static const char *brwscmd[] = { "bash", "/root/scripts/runbrowser.sh", NULL };
+static const char *gmalcmd[] = { "bash", "/root/scripts/runbrowser.sh", "https://mail.google.com", NULL };
+static const char *gcalcmd[] = { "bash", "/root/scripts/runbrowser.sh", "https://www.google.com/calendar/render", NULL };
  
 static Key keys[] = {
 	/* modifier                     key        function        argument */
 	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
 	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
-	{ MODKEY,                       XK_u,      spawn,          {.v = uzblcmd } },
+	{ MODKEY,                       XK_z,      spawn,          {.v = alltermscmd } },
+	{ MODKEY,                       XK_a,      toggleaside,    {0} },
+	{ MODKEY,                       XK_u,      spawn,          {.v = brwscmd } },
+	{ MODKEY,                       XK_g,      spawn,          {.v = gmalcmd } },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
@@ -88,6 +92,7 @@ static Key keys[] = {
 	{ MODKEY,                       XK_h,      setmfact,       {.f = -0.05} },
 	{ MODKEY,                       XK_l,      setmfact,       {.f = +0.05} },
 	{ MODKEY,                       XK_Return, zoom,           {0} },
+	{ MODKEY,                       XK_grave,  zoom,           {0} },
 	{ MODKEY,                       XK_Tab,    view,           {0} },
 	{ MODKEY,                       XK_c,      killclient,     {0} },
 	{ MODKEY,                       XK_q,      killclient,     {0} },
@@ -115,9 +120,6 @@ static Key keys[] = {
 	TAGKEYS(                        XK_8,                      7)
 	TAGKEYS(                        XK_9,                      8)
 	{ MODKEY|ShiftMask,             XK_q,      quit,           {0} },
-    { MODKEY,                       XK_Right,  totv,           {.i = 0} },
-    { MODKEY,                       XK_Left,   fromtv,         {.i = 0} },
-    { MODKEY,                       XK_Down,   fromtv,         {.i = 1} },
 	{ MODKEY,                       XK_Up,     spawn,          {.v = escflash } },
 	{ AnyKey,                       XF86XK_Eject, spawn, {.v = eject } },
 	{ AnyKey,                       XF86XK_AudioRaiseVolume, spawn, {.v = volumeup } },
@@ -145,7 +147,7 @@ static Button buttons[] = {
 	{ ClkTagBar,            MODKEY,         Button1,        tag,            {0} },
 	{ ClkTagBar,            MODKEY,         Button3,        toggletag,      {0} },
 	{ ClkStatusText,        0,              Button1,        spawn,          {.v = gmalcmd } },
-	{ ClkStatusText,        0,              Button2,        spawn,          {.v = uzblcmd } },
+	{ ClkStatusText,        0,              Button2,        spawn,          {.v = brwscmd } },
 	{ ClkStatusText,        0,              Button3,        spawn,          {.v = gcalcmd } },
 };
 
@@ -179,35 +181,6 @@ htile(Monitor *m) {
 }
 
 static void
-fromtv(const Arg *arg) {
-	Client *c;
-    int i;
-	for(i = 0, c = mons->next->clients; c; i++, c = mons->next->clients) {
-        sendmon(c, mons);
-        if(arg->i == 1) {
-            XWindowAttributes wa;
-            if((XGetWindowAttributes(dpy, c->win, &wa)) && (wa.map_state == IsViewable)){
-                c->isfloating = True;
-                resize(c, 0, 0, c->w, c->h, False);
-                sendmon(c, mons);
-                focus(c);
-            }
-        }
-        else {
-            // Maybe keep it floating and use hard coded size?
-            c->isfloating = False;
-            sendmon(c, mons);
-        }
-    }
-}
-
-static void
-totv(const Arg *arg) {
-	Client *c = mons->sel;
-    if(c && ISVISIBLE(c)) {
-        Arg arg = {0};
-        arg.i = 0;
-        fromtv(&arg);
-        sendmon(c, mons->next);
-    }
+toggleaside() {
+    ataside = !ataside;
 }

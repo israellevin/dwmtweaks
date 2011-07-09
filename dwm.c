@@ -36,6 +36,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xproto.h>
 #include <X11/Xutil.h>
+#include <X11/XKBlib.h>
 #ifdef XINERAMA
 #include <X11/extensions/Xinerama.h>
 #endif /* XINERAMA */
@@ -91,6 +92,7 @@ struct Client {
 	Client *snext;
 	Monitor *mon;
 	Window win;
+    unsigned char kbdgrp;
 };
 
 typedef struct {
@@ -239,6 +241,8 @@ static int xerrordummy(Display *dpy, XErrorEvent *ee);
 static int xerrorstart(Display *dpy, XErrorEvent *ee);
 static void zoom(const Arg *arg);
 
+static void keyrelease(XEvent *e);
+
 /* variables */
 static const char broken[] = "broken";
 static char stext[256];
@@ -249,6 +253,7 @@ static int (*xerrorxlib)(Display *, XErrorEvent *);
 static unsigned int numlockmask = 0;
 static void (*handler[LASTEvent]) (XEvent *) = {
 	[ButtonPress] = buttonpress,
+    [ButtonRelease] = keyrelease,
 	[ConfigureRequest] = configurerequest,
 	[ConfigureNotify] = configurenotify,
 	[DestroyNotify] = destroynotify,
@@ -256,6 +261,7 @@ static void (*handler[LASTEvent]) (XEvent *) = {
 	[Expose] = expose,
 	[FocusIn] = focusin,
 	[KeyPress] = keypress,
+    [KeyRelease] = keyrelease,
 	[MappingNotify] = mappingnotify,
 	[MapRequest] = maprequest,
 	[PropertyNotify] = propertynotify,
@@ -277,6 +283,14 @@ static Window root;
 struct NumTags { char limitexceeded[LENGTH(tags) > 31 ? -1 : 1]; };
 
 /* function implementations */
+
+static int combo = 0;
+
+void
+keyrelease(XEvent *e) {
+	combo = 0;
+}
+
 void
 applyrules(Client *c) {
 	const char *class, *instance;
@@ -402,8 +416,21 @@ arrangemon(Monitor *m) {
 
 void
 attach(Client *c) {
-	c->next = c->mon->clients;
-	c->mon->clients = c;
+    // Attachaside if flag
+    if(ataside) {
+        ataside = False;
+        Client *at = nexttiled(c->mon->clients);
+        if(c->mon->sel == NULL || c->mon->sel->isfloating || !at) {
+            attach(c);
+            return;
+        }
+        c->next = at->next;
+        at->next = c;
+    }
+    else {
+        c->next = c->mon->clients;
+        c->mon->clients = c;
+    }
 }
 
 void
@@ -694,12 +721,14 @@ drawbar(Monitor *m) {
 	}
 	dc.x = 0;
 	for(i = 0; i < LENGTH(tags); i++) {
-		dc.w = TEXTW(tags[i]);
-		col = m->tagset[m->seltags] & 1 << i ? dc.sel : dc.norm;
-		drawtext(tags[i], col, urg & 1 << i);
-		drawsquare(m == selmon && selmon->sel && selmon->sel->tags & 1 << i,
-		           occ & 1 << i, urg & 1 << i, col);
-		dc.x += dc.w;
+		if (m->tagset[m->seltags] & 1 << i || occ & 1 << i) {
+			dc.w = TEXTW(tags[i]);
+			col = m->tagset[m->seltags] & 1 << i ? dc.sel : dc.norm;
+			drawtext(tags[i], col, urg & 1 << i);
+			drawsquare(m == selmon && selmon->sel && selmon->sel->tags & 1 << i,
+                       occ & 1 << i, urg & 1 << i, col);
+            dc.x += dc.w;
+        }
 	}
 	dc.w = blw = TEXTW(m->ltsymbol);
 
@@ -833,13 +862,14 @@ focus(Client *c) {
 	if(!c || !ISVISIBLE(c))
 		for(c = selmon->stack; c && !ISVISIBLE(c); c = c->snext);
     // quick fix http://lists.suckless.org/dev/0912/2687.html
-	if(selmon->sel)
+	if(selmon->sel && selmon->lt[selmon->sellt]->arrange != monocle)
 		unfocus(selmon->sel);
 	if(c) {
 		if(c->mon != selmon)
 			selmon = c->mon;
 		if(c->isurgent)
 			clearurgent(c);
+        XkbLockGroup (dpy, XkbUseCoreKbd, c->kbdgrp);
 		detachstack(c);
 		attachstack(c);
 		grabbuttons(c, True);
@@ -1111,6 +1141,7 @@ manage(Window w, XWindowAttributes *wa) {
 	Client *c, *t = NULL;
 	Window trans = None;
 	XWindowChanges wc;
+    XkbStateRec kbd_state;
 
 	if(!(c = malloc(sizeof(Client))))
 		die("fatal: could not malloc() %u bytes\n", sizeof(Client));
@@ -1166,6 +1197,8 @@ manage(Window w, XWindowAttributes *wa) {
 	XMapWindow(dpy, c->win);
 	setclientstate(c, NormalState);
 	arrange(c->mon);
+    XkbGetState (dpy, XkbUseCoreKbd, &kbd_state);
+	c->kbdgrp = kbd_state.group;
 }
 
 void
@@ -1490,7 +1523,7 @@ setmfact(const Arg *arg) {
 	f = arg->f < 1.0 ? arg->f + selmon->mfact : arg->f - 1.0;
 
     // Report mfact
-    sprintf(stext,"%f",f);
+    sprintf(stext, "%f", f);
     // Enable extreme mfacts
 	if(f < 0.01 || f > 0.99)
 		return;
@@ -1688,11 +1721,15 @@ toggleview(const Arg *arg) {
 
 void
 unfocus(Client *c) {
+    XkbStateRec kbd_state;
+
 	if(!c)
 		return;
 	grabbuttons(c, False);
 	XSetWindowBorder(dpy, c->win, dc.norm[ColBorder]);
 	XSetInputFocus(dpy, root, RevertToPointerRoot, CurrentTime);
+    XkbGetState (dpy, XkbUseCoreKbd, &kbd_state);
+	c->kbdgrp = kbd_state.group;
 }
 
 void
