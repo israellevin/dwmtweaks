@@ -167,12 +167,12 @@ drawmenu(void) {
 	dc->w = (lines > 0 || !matches) ? mw - dc->x : inputw;
 	drawtext(dc, text, normcol);
 
+	if((curpos = textnw(dc, text, cursor) + dc->h/2 - 2) < dc->w)
+		drawrect(dc, curpos, 2, 1, dc->h - 4, True, FG(dc, normcol));
+
     dc->x = mw - textw(dc, hitstxt);
     drawtext(dc, hitstxt, normcol);
     dc->x = 0;
-
-	if((curpos = textnw(dc, text, cursor) + dc->h/2 - 2) < dc->w)
-		drawrect(dc, curpos, 2, 1, dc->h - 4, True, FG(dc, normcol));
 
 	if(lines > 0) {
 		dc->w = mw - dc->x;
