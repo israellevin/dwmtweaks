@@ -58,9 +58,8 @@ static const Layout layouts[] = {
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
 
 /* commands */
-static const char *dmenucmd[] = { "dmenu_run", "-i", "-fn", "-*-terminus-*-*-*-*-50-*-*-*-*-*-*-*", "-nb", normbgcolor, "-nf", normfgcolor, "-sb", selbgcolor, "-sf", selfgcolor, "-xs", "-l", "10", "-c", "-rs", NULL };
+static const char *dmenucmd[] = { "dmenu_run", "-fn", "-*-terminus-*-*-*-*-50-*-*-*-*-*-*-*", "-i", "-nb", normbgcolor, "-nf", normfgcolor, "-sb", selbgcolor, "-sf", selfgcolor, "-l", "10", NULL };
 static const char *termcmd[] = { "bash", "/root/scripts/term.sh", NULL };
-static const char *alltermscmd[] = { "bash", "/root/scripts/allterms.sh", NULL };
 static const char *eject[]  = { "bash", "/root/scripts/dmntnir.sh", NULL };
 static const char *escflash[]  = { "bash", "/root/scripts/escflash.sh", NULL };
 static const char *volumeup[]  = { "bash", "/root/scripts/vol.sh", "1%+", NULL };
@@ -78,7 +77,6 @@ static Key keys[] = {
 	/* modifier                     key        function        argument */
 	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
 	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
-	{ MODKEY,                       XK_z,      spawn,          {.v = alltermscmd } },
 	{ MODKEY,                       XK_a,      toggleaside,    {0} },
 	{ MODKEY,                       XK_u,      spawn,          {.v = brwscmd } },
 	{ MODKEY,                       XK_g,      spawn,          {.v = gmalcmd } },
