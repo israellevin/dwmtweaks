@@ -58,20 +58,20 @@ static const Layout layouts[] = {
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
 
 /* commands */
-static const char *dmenucmd[] = { "bash", "/root/scripts/launcher.sh", NULL };
-static const char *termcmd[] = { "bash", "/root/scripts/term.sh", NULL };
-static const char *eject[]  = { "bash", "/root/scripts/dmntnir.sh", NULL };
-static const char *escflash[]  = { "bash", "/root/scripts/escflash.sh", NULL };
-static const char *volumeup[]  = { "bash", "/root/scripts/vol.sh", "1%+", NULL };
-static const char *volumedown[]  = { "bash", "/root/scripts/vol.sh", "1%-", NULL };
-static const char *volumemute[]  = { "bash", "/root/scripts/vol.sh", "toggle", NULL };
-static const char *toggleplay[]  = { "bash", "/root/scripts/anyremote.sh", "pause", NULL };
-static const char *vidplay[]  = { "bash", "/root/scripts/svidplay.sh", NULL };
-static const char *mpdplay[]  = { "bash", "/root/scripts/mpdplay.sh", NULL };
-static const char *comix[]  = { "bash", "/root/scripts/comix.sh", NULL };
-static const char *brwscmd[] = { "bash", "/root/scripts/runbrowser.sh", NULL };
-static const char *gmalcmd[] = { "bash", "/root/scripts/runbrowser.sh", "https://mail.google.com", NULL };
-static const char *gcalcmd[] = { "bash", "/root/scripts/runbrowser.sh", "https://www.google.com/calendar/render", NULL };
+static const char *dmenucmd[] = { "dash", "/root/scripts/launcher.sh", NULL };
+static const char *termcmd[] = { "dash", "/root/scripts/term.sh", NULL };
+static const char *eject[]  = { "dash", "/root/scripts/dmntnir.sh", NULL };
+static const char *escflash[]  = { "dash", "/root/scripts/escflash.sh", NULL };
+static const char *volumeup[]  = { "dash", "/root/scripts/vol.sh", "1%+", NULL };
+static const char *volumedown[]  = { "dash", "/root/scripts/vol.sh", "1%-", NULL };
+static const char *volumemute[]  = { "dash", "/root/scripts/vol.sh", "toggle", NULL };
+static const char *toggleplay[]  = { "dash", "/root/scripts/anyremote.sh", "pause", NULL };
+static const char *vidplay[]  = { "bash", "/root/scripts/vidplay.sh", NULL };
+static const char *mpdplay[]  = { "dash", "/root/scripts/mpdplay.sh", NULL };
+static const char *comix[]  = { "dash", "/root/scripts/comix.sh", NULL };
+static const char *brwscmd[] = { "dash", "/root/scripts/runbrowser.sh", NULL };
+static const char *gmalcmd[] = { "dash", "/root/scripts/runbrowser.sh", "https://mail.google.com", NULL };
+static const char *gcalcmd[] = { "dash", "/root/scripts/runbrowser.sh", "https://www.google.com/calendar/render", NULL };
  
 static Key keys[] = {
 	/* modifier                     key        function        argument */
