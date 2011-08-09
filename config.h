@@ -58,7 +58,7 @@ static const Layout layouts[] = {
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
 
 /* commands */
-static const char *dmenucmd[] = { "dmenu_run", "-fn", "-*-terminus-*-*-*-*-50-*-*-*-*-*-*-*", "-i", "-nb", normbgcolor, "-nf", normfgcolor, "-sb", selbgcolor, "-sf", selfgcolor, "-l", "10", NULL };
+static const char *dmenucmd[] = { "bash", "/root/scripts/launcher.sh", NULL };
 static const char *termcmd[] = { "bash", "/root/scripts/term.sh", NULL };
 static const char *eject[]  = { "bash", "/root/scripts/dmntnir.sh", NULL };
 static const char *escflash[]  = { "bash", "/root/scripts/escflash.sh", NULL };
