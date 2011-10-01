@@ -295,31 +295,31 @@ applyrules(Client *c) {
 	unsigned int i;
 	const Rule *r;
 	Monitor *m;
-	XClassHint ch = { 0 };
+	XClassHint ch = { NULL, NULL };
 
 	/* rule matching */
 	c->isfloating = c->tags = 0;
-	if(XGetClassHint(dpy, c->win, &ch)) {
-		class = ch.res_class ? ch.res_class : broken;
-		instance = ch.res_name ? ch.res_name : broken;
-		for(i = 0; i < LENGTH(rules); i++) {
-			r = &rules[i];
-			if((!r->title || strstr(c->name, r->title))
-			&& (!r->class || strstr(class, r->class))
-			&& (!r->instance || strstr(instance, r->instance)))
-			{
-				c->isfloating = r->isfloating;
-				c->tags |= r->tags;
-				for(m = mons; m && m->num != r->monitor; m = m->next);
-				if(m)
-					c->mon = m;
-			}
+	XGetClassHint(dpy, c->win, &ch);
+	class    = ch.res_class ? ch.res_class : broken;
+	instance = ch.res_name  ? ch.res_name  : broken;
+
+	for(i = 0; i < LENGTH(rules); i++) {
+		r = &rules[i];
+		if((!r->title || strstr(c->name, r->title))
+		&& (!r->class || strstr(class, r->class))
+		&& (!r->instance || strstr(instance, r->instance)))
+		{
+			c->isfloating = r->isfloating;
+			c->tags |= r->tags;
+			for(m = mons; m && m->num != r->monitor; m = m->next);
+			if(m)
+				c->mon = m;
 		}
-		if(ch.res_class)
-			XFree(ch.res_class);
-		if(ch.res_name)
-			XFree(ch.res_name);
 	}
+	if(ch.res_class)
+		XFree(ch.res_class);
+	if(ch.res_name)
+		XFree(ch.res_name);
 	c->tags = c->tags & TAGMASK ? c->tags & TAGMASK : c->mon->tagset[c->mon->seltags];
 }
 
@@ -395,7 +395,6 @@ arrange(Monitor *m) {
 		showhide(m->stack);
 	else for(m = mons; m; m = m->next)
 		showhide(m->stack);
-	focus(NULL);
 	if(m)
 		arrangemon(m);
 	else for(m = mons; m; m = m->next)
@@ -466,9 +465,9 @@ buttonpress(XEvent *e) {
 	}
 	if(ev->window == selmon->barwin) {
 		i = x = 0;
-		do {
+		do
 			x += TEXTW(tags[i]);
-		} while(ev->x >= x && ++i < LENGTH(tags));
+		while(ev->x >= x && ++i < LENGTH(tags));
 		if(i < LENGTH(tags)) {
 			click = ClkTagBar;
 			arg.ui = 1 << i;
@@ -631,6 +630,7 @@ configurenotify(XEvent *e) {
 			updatebars();
 			for(m = mons; m; m = m->next)
 				XMoveResizeWindow(dpy, m->barwin, m->wx, m->by, m->ww, bh);
+			focus(NULL);
 			arrange(NULL);
 		}
 	}
@@ -648,18 +648,26 @@ configurerequest(XEvent *e) {
 			c->bw = ev->border_width;
 		else if(c->isfloating || !selmon->lt[selmon->sellt]->arrange) {
 			m = c->mon;
-			if(ev->value_mask & CWX)
+			if(ev->value_mask & CWX) {
+				c->oldx = c->x;
 				c->x = m->mx + ev->x;
-			if(ev->value_mask & CWY)
+			}
+			if(ev->value_mask & CWY) {
+				c->oldy = c->y;
 				c->y = m->my + ev->y;
-			if(ev->value_mask & CWWidth)
+			}
+			if(ev->value_mask & CWWidth) {
+				c->oldw = c->w;
 				c->w = ev->width;
-			if(ev->value_mask & CWHeight)
+			}
+			if(ev->value_mask & CWHeight) {
+				c->oldh = c->h;
 				c->h = ev->height;
+			}
 			if((c->x + c->w) > m->mx + m->mw && c->isfloating)
-				c->x = m->mx + (m->mw / 2 - c->w / 2); /* center in x direction */
+				c->x = m->mx + (m->mw / 2 - WIDTH(c) / 2); /* center in x direction */
 			if((c->y + c->h) > m->my + m->mh && c->isfloating)
-				c->y = m->my + (m->mh / 2 - c->h / 2); /* center in y direction */
+				c->y = m->my + (m->mh / 2 - HEIGHT(c) / 2); /* center in y direction */
 			if((ev->value_mask & (CWX|CWY)) && !(ev->value_mask & (CWWidth|CWHeight)))
 				configure(c);
 			if(ISVISIBLE(c))
@@ -745,12 +753,10 @@ dirtomon(int dir) {
 		if(!(m = selmon->next))
 			m = mons;
 	}
-	else {
-		if(selmon == mons)
-			for(m = mons; m->next; m = m->next);
-		else
-			for(m = mons; m->next != selmon; m = m->next);
-	}
+	else if(selmon == mons)
+		for(m = mons; m->next; m = m->next);
+	else
+		for(m = mons; m->next != selmon; m = m->next);
 	return m;
 }
 
@@ -784,6 +790,7 @@ drawbar(Monitor *m) {
     // Indicate keyboard layout
     XkbStateRec kbd_state;
     XkbGetState(dpy, XkbUseCoreKbd, &kbd_state);
+
 	drawtext(m->ltsymbol, (kbd_state.group == 0) ? dc.sel : dc.norm, False);
 
 	dc.x += dc.w;
@@ -903,7 +910,6 @@ focus(Client *c) {
 			selmon = c->mon;
 		if(c->isurgent)
 			clearurgent(c);
-
 
         // Set keyboard layout per client
         XkbLockGroup (dpy, XkbUseCoreKbd, c->kbdgrp);
@@ -1059,12 +1065,11 @@ grabkeys(void) {
 		KeyCode code;
 
 		XUngrabKey(dpy, AnyKey, AnyModifier, root);
-		for(i = 0; i < LENGTH(keys); i++) {
+		for(i = 0; i < LENGTH(keys); i++)
 			if((code = XKeysymToKeycode(dpy, keys[i].keysym)))
 				for(j = 0; j < LENGTH(modifiers); j++)
 					XGrabKey(dpy, code, keys[i].mod | modifiers[j], root,
 						 True, GrabModeAsync, GrabModeAsync);
-		}
 	}
 }
 
@@ -1073,7 +1078,6 @@ initfont(const char *fontstr) {
 	char *def, **missing;
 	int n;
 
-	missing = NULL;
 	dc.font.set = XCreateFontSet(dpy, fontstr, &missing, &n, &def);
 	if(missing) {
 		while(n--)
@@ -1169,7 +1173,7 @@ manage(Window w, XWindowAttributes *wa) {
 	c->h = c->oldh = wa->height;
 	c->oldbw = wa->border_width;
 	if(c->w == c->mon->mw && c->h == c->mon->mh) {
-		c->isfloating = True;
+		c->isfloating = True; // regression with flash, XXXX
 		c->x = c->mon->mx;
 		c->y = c->mon->my;
 		c->bw = 0;
@@ -1200,9 +1204,13 @@ manage(Window w, XWindowAttributes *wa) {
 	attach(c);
 	attachstack(c);
 	XMoveResizeWindow(dpy, c->win, c->x + 2 * sw, c->y, c->w, c->h); /* some windows require this */
-	XMapWindow(dpy, c->win);
 	setclientstate(c, NormalState);
+	if (c->mon == selmon)
+		unfocus(selmon->sel, False);
+	c->mon->sel = c;
 	arrange(c->mon);
+	XMapWindow(dpy, c->win);
+	focus(NULL);
 
     // Get current keyboard layout
     XkbStateRec kbd_state;
@@ -1358,6 +1366,7 @@ ptrtomon(int x, int y) {
 			return m;
 	return selmon;
 }
+
 void
 quit(const Arg *arg) {
 	running = False;
@@ -1462,10 +1471,9 @@ run(void) {
 	XEvent ev;
 	/* main event loop */
 	XSync(dpy, False);
-	while(running && !XNextEvent(dpy, &ev)) {
+	while(running && !XNextEvent(dpy, &ev))
 		if(handler[ev.type])
 			handler[ev.type](&ev); /* call handler */
-	}
 }
 
 void
@@ -1569,14 +1577,8 @@ setmfact(const Arg *arg) {
 	if(!arg || !selmon->lt[selmon->sellt]->arrange)
 		return;
 	f = arg->f < 1.0 ? arg->f + selmon->mfact : arg->f - 1.0;
-
-    // Enable extreme mfacts
-	if(f < 0.01 || f > 0.99)
+	if(f < 0.1 || f > 0.9)
 		return;
-
-    // Show mfact change in bar
-    sprintf(stext, "%f", f);
-
 	selmon->mfact = f;
 	arrange(selmon);
 }
@@ -1678,6 +1680,7 @@ void
 tag(const Arg *arg) {
 	if(selmon->sel && arg->ui & TAGMASK) {
 		selmon->sel->tags = arg->ui & TAGMASK;
+		focus(NULL);
 		arrange(selmon);
 	}
 }
@@ -1716,9 +1719,9 @@ tile(Monitor *m) {
 	if(--n == 0)
 		return;
 	/* tile stack */
-	x = (m->wx + mw > c->x + c->w) ? c->x + c->w + 2 * c->bw : m->wx + mw;
+	x = (m->wx > c->x) ? c->x + mw + 2 * c->bw : m->wx + mw;
 	y = m->wy;
-	w = (m->wx + mw > c->x + c->w) ? m->wx + m->ww - x : m->ww - mw;
+	w = (m->wx > c->x) ? m->wx + m->ww - x : m->ww - mw;
 	h = m->wh / n;
 	if(h < bh)
 		h = m->wh;
@@ -1758,6 +1761,7 @@ toggletag(const Arg *arg) {
 	newtags = selmon->sel->tags ^ (arg->ui & TAGMASK);
 	if(newtags) {
 		selmon->sel->tags = newtags;
+		focus(NULL);
 		arrange(selmon);
 	}
 }
@@ -1768,6 +1772,7 @@ toggleview(const Arg *arg) {
 
 	if(newtagset) {
 		selmon->tagset[selmon->seltags] = newtagset;
+		focus(NULL);
 		arrange(selmon);
 	}
 }
@@ -1816,8 +1821,12 @@ unmapnotify(XEvent *e) {
 	Client *c;
 	XUnmapEvent *ev = &e->xunmap;
 
-	if((c = wintoclient(ev->window)))
-		unmanage(c, False);
+	if((c = wintoclient(ev->window))) {
+		if(ev->send_event)
+			setclientstate(c, WithdrawnState);
+		else
+			unmanage(c, False);
+	}
 }
 
 void
@@ -2038,6 +2047,7 @@ view(const Arg *arg) {
 	selmon->seltags ^= 1; /* toggle sel tagset */
 	if(arg->ui & TAGMASK)
 		selmon->tagset[selmon->seltags] = arg->ui & TAGMASK;
+	focus(NULL);
 	arrange(selmon);
 }
 

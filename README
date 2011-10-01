@@ -4,7 +4,7 @@ DWM is a minimalistic window manager, these are my tweaks for it.
 
 Current changes:
 * Opening new clients in the stack and without focus
-* Not showing unused tags in the bar
+* Not showing unused tags in the bar (TODO: fix bar clicks)
 * Keyboard layout per client
 * Keyboard layout indicator in bar
 * Bar reports mfact changes
@@ -55,7 +55,7 @@ like this in your .xinitrc:
 
     while xsetroot -name "`date` `uptime | sed 's/.*,//'`"
     do
-    	sleep 20
+    	sleep 1
     done &
     exec dwm
 
