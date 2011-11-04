@@ -31,6 +31,7 @@ static const Rule rules[] = {
 
 /* layout(s) */
 static const float mfact      = 0.85; /* factor of master area size [0.05..0.95] */
+static const int nmaster      = 1;    /* number of clients in master area */
 static const Bool resizehints = False; /* False means respect size hints in tiled resizals */
 
 static const Layout layouts[] = {
@@ -58,8 +59,8 @@ static const Layout layouts[] = {
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
 
 /* commands */
-static const char *dmenucmd[] = { "dash", "/root/scripts/launcher.sh", NULL };
-static const char *termcmd[] = { "dash", "/root/scripts/term.sh", NULL };
+static const char *dmenucmd[] = { "dmenu_run", NULL };
+static const char *termcmd[] = { "urxvtcd", NULL };
 static const char *eject[]  = { "dash", "/root/scripts/dmntnir.sh", NULL };
 static const char *escflash[]  = { "dash", "/root/scripts/escflash.sh", NULL };
 static const char *volumeup[]  = { "dash", "/root/scripts/vol.sh", "1%+", NULL };
@@ -69,7 +70,7 @@ static const char *toggleplay[]  = { "dash", "/root/scripts/anyremote.sh", "paus
 static const char *vidplay[]  = { "bash", "/root/scripts/vidplay.sh", NULL };
 static const char *mpdplay[]  = { "dash", "/root/scripts/mpdplay.sh", NULL };
 static const char *comix[]  = { "dash", "/root/scripts/comix.sh", NULL };
-static const char *brwscmd[] = { "dash", "/root/scripts/runbrowser.sh", NULL };
+static const char *brwscmd[] = { "luakit", NULL };
 static const char *gmalcmd[] = { "dash", "/root/scripts/runbrowser.sh", "https://mail.google.com", NULL };
 static const char *gcalcmd[] = { "dash", "/root/scripts/runbrowser.sh", "https://www.google.com/calendar/render", NULL };
  
@@ -83,6 +84,8 @@ static Key keys[] = {
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
+	{ MODKEY|ShiftMask,             XK_h,      incnmaster,     {.i = +1 } },
+	{ MODKEY|ShiftMask,             XK_l,      incnmaster,     {.i = -1 } },
 	{ MODKEY,                       XK_r,      focusstack,     {.i = -1 } },
 	{ MODKEY,                       XK_r,      zoom,           {0} },
 	{ MODKEY,                       XK_h,      setmfact,       {.f = -0.05} },
