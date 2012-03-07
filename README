@@ -1,18 +1,3 @@
-dwmtweaks - my own personal tweaking of dwm
-===========================================
-DWM is a minimalistic window manager, these are my tweaks for it.
-
-Current changes:
-* Opening new clients in the stack and without focus
-* Not showing unused tags in the bar (TODO: fix bar clicks)
-* Keyboard layout per client
-* Keyboard layout indicator in bar
-* Bar reports mfact changes
-* Extreme mfacts
-* Click to focus
-
-Below is original README:
-
 dwm - dynamic window manager
 ============================
 dwm is an extremely fast, small, and dynamic window manager for X.
