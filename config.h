@@ -1,7 +1,7 @@
 /* See LICENSE file for copyright and license details. */
 
 /* appearance */
-static const char font[]            = "-*-terminus-*-*-*-*-24-*-*-*-*-*-*-*";
+static const char font[]            = "-*-fixed-*-*-*-*-20-*-*-*-*-*-*-*";
 static const char normbordercolor[] = "#000000";
 static const char normbgcolor[]     = "#000000";
 static const char normfgcolor[]     = "#bbbbbb";
@@ -45,9 +45,9 @@ static const Layout layouts[] = {
 /* key definitions */
 #define MODKEY Mod4Mask
 #define TAGKEYS(KEY,TAG) \
-	{ MODKEY,                       KEY,      view,      {.ui = 1 << TAG} }, \
+	{ MODKEY,                       KEY,      view,           {.ui = 1 << TAG} }, \
 	{ MODKEY|ControlMask,           KEY,      toggleview,     {.ui = 1 << TAG} }, \
-	{ MODKEY|ShiftMask,             KEY,      tag,       {.ui = 1 << TAG} }, \
+	{ MODKEY|ShiftMask,             KEY,      tag,            {.ui = 1 << TAG} }, \
 	{ MODKEY|ControlMask|ShiftMask, KEY,      toggletag,      {.ui = 1 << TAG} }, \
 	{ MODKEY|Mod1Mask,              KEY,      tag,            {.ui = 1 << TAG} }, \
 	{ MODKEY|Mod1Mask,              KEY,      view,           {.ui = 1 << TAG} },
@@ -61,19 +61,18 @@ static const Layout layouts[] = {
 /* commands */
 static const char *dmenucmd[] = { "dmenu_run", NULL };
 static const char *termcmd[] = { "urxvtcd", NULL };
-static const char *eject[]  = { "dash", "/root/scripts/dmntnir.sh", NULL };
-static const char *escflash[]  = { "dash", "/root/scripts/escflash.sh", NULL };
-static const char *volumeup[]  = { "dash", "/root/scripts/vol.sh", "1%+", NULL };
-static const char *volumedown[]  = { "dash", "/root/scripts/vol.sh", "1%-", NULL };
-static const char *volumemute[]  = { "dash", "/root/scripts/vol.sh", "toggle", NULL };
-static const char *toggleplay[]  = { "dash", "/root/scripts/anyremote.sh", "pause", NULL };
-static const char *vidplay[]  = { "bash", "/root/scripts/vidplay.sh", NULL };
-static const char *mpdplay[]  = { "dash", "/root/scripts/mpdplay.sh", NULL };
-static const char *comix[]  = { "dash", "/root/scripts/comix.sh", NULL };
-static const char *brwscmd[] = { "luakit", NULL };
-static const char *gmalcmd[] = { "dash", "/root/scripts/runbrowser.sh", "https://mail.google.com", NULL };
-static const char *gcalcmd[] = { "dash", "/root/scripts/runbrowser.sh", "https://www.google.com/calendar/render", NULL };
- 
+static const char *eject[]  = { "dmntnir.sh", NULL };
+static const char *volumeup[]  = { "vol.sh", "5%+", NULL };
+static const char *volumedown[]  = { "vol.sh", "5%-", NULL };
+static const char *volumemute[]  = { "vol.sh", "toggle", NULL };
+static const char *toggleplay[]  = { "remote.sh", "pause", NULL };
+static const char *vidplay[]  = { "vidplay.sh", NULL };
+static const char *mpdplay[]  = { "mpdplay.sh", NULL };
+static const char *comix[]  = { "comix.sh", NULL };
+static const char *brwscmd[] = { "browser.sh", NULL };
+static const char *gmalcmd[] = { "browser.sh", "https://mail.google.com", NULL };
+static const char *gcalcmd[] = { "browser.sh", "https://www.google.com/calendar/render", NULL };
+
 static Key keys[] = {
 	/* modifier                     key        function        argument */
 	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
@@ -119,7 +118,6 @@ static Key keys[] = {
 	TAGKEYS(                        XK_8,                      7)
 	TAGKEYS(                        XK_9,                      8)
 	{ MODKEY|ShiftMask,             XK_q,      quit,           {0} },
-	{ MODKEY,                       XK_Up,     spawn,          {.v = escflash } },
 	{ AnyKey,                       XF86XK_Eject, spawn, {.v = eject } },
 	{ AnyKey,                       XF86XK_AudioRaiseVolume, spawn, {.v = volumeup } },
 	{ AnyKey,                       XF86XK_AudioLowerVolume, spawn, {.v = volumedown } },
@@ -136,8 +134,11 @@ static Button buttons[] = {
 	/* click                event mask      button          function        argument */
 	{ ClkLtSymbol,          0,              Button1,        setlayout,      {0} },
 	{ ClkLtSymbol,          0,              Button3,        setlayout,      {.v = &layouts[1]} },
-	{ ClkWinTitle,          0,              Button2,        zoom,           {0} },
-	{ ClkStatusText,        0,              Button2,        spawn,          {.v = termcmd } },
+	{ ClkWinTitle,          0,              Button1,        zoom,           {0} },
+	{ ClkWinTitle,          0,              Button3,        zoom,           {0} },
+	{ ClkWinTitle,          0,              Button3,        focusstack,     {.i = -1 } },
+	{ ClkStatusText,        0,              Button1,        spawn,          {.v = gmalcmd } },
+	{ ClkStatusText,        0,              Button3,        spawn,          {.v = gcalcmd } },
 	{ ClkClientWin,         MODKEY,         Button1,        movemouse,      {0} },
 	{ ClkClientWin,         MODKEY,         Button2,        togglefloating, {0} },
 	{ ClkClientWin,         MODKEY,         Button3,        resizemouse,    {0} },
@@ -145,9 +146,6 @@ static Button buttons[] = {
 	{ ClkTagBar,            0,              Button3,        toggleview,     {0} },
 	{ ClkTagBar,            MODKEY,         Button1,        tag,            {0} },
 	{ ClkTagBar,            MODKEY,         Button3,        toggletag,      {0} },
-	{ ClkStatusText,        0,              Button1,        spawn,          {.v = gmalcmd } },
-	{ ClkStatusText,        0,              Button2,        spawn,          {.v = brwscmd } },
-	{ ClkStatusText,        0,              Button3,        spawn,          {.v = gcalcmd } },
 };
 
 static void
