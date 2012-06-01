@@ -473,10 +473,23 @@ buttonpress(XEvent *e) {
 	}
 	if(ev->window == selmon->barwin) {
 		i = x = 0;
-		do
+
+        // Only count tags with clients
+        unsigned int activetags = m->tagset[m->seltags];
+        for(c = m->clients; c; c = c->next) {
+            activetags |= c->tags;
+        }
+        for(; i < LENGTH(tags); i++) {
+            if(!(activetags & 1 << i)) continue;
 			x += TEXTW(tags[i]);
-		while(ev->x >= x && ++i < LENGTH(tags));
-		if(i < LENGTH(tags)) {
+            if(ev->x < x) {
+                activetags = -1;
+                break;
+            }
+        }
+        sprintf(stext, "%u", activetags);
+
+		if(-1 == activetags) {
 			click = ClkTagBar;
 			arg.ui = 1 << i;
 		}

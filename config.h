@@ -66,10 +66,13 @@ static const char *volumeup[]  = { "vol.sh", "5%+", NULL };
 static const char *volumedown[]  = { "vol.sh", "5%-", NULL };
 static const char *volumemute[]  = { "vol.sh", "toggle", NULL };
 static const char *toggleplay[]  = { "remote.sh", "pause", NULL };
+static const char *audionext[]  = { "remote.sh", "forward", NULL };
+static const char *audioprev[]  = { "remote.sh", "back", NULL };
 static const char *vidplay[]  = { "vidplay.sh", NULL };
 static const char *mpdplay[]  = { "mpdplay.sh", NULL };
 static const char *comix[]  = { "comix.sh", NULL };
 static const char *brwscmd[] = { "browser.sh", NULL };
+static const char *blnkcmd[] = { "browser.sh", "about:blank", NULL };
 static const char *gmalcmd[] = { "browser.sh", "https://mail.google.com", NULL };
 static const char *gcalcmd[] = { "browser.sh", "https://www.google.com/calendar/render", NULL };
 
@@ -78,8 +81,10 @@ static Key keys[] = {
 	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
 	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
 	{ MODKEY,                       XK_a,      toggleaside,    {0} },
-	{ MODKEY,                       XK_u,      spawn,          {.v = brwscmd } },
+	{ MODKEY,                       XK_u,      spawn,          {.v = blnkcmd } },
+	{ MODKEY|ShiftMask,             XK_u,      spawn,          {.v = brwscmd } },
 	{ MODKEY,                       XK_g,      spawn,          {.v = gmalcmd } },
+	{ MODKEY|ShiftMask,             XK_g,      spawn,          {.v = gcalcmd } },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
@@ -126,6 +131,8 @@ static Key keys[] = {
 	{ AnyKey,                       XF86XK_Video, spawn, {.v = vidplay } },
 	{ AnyKey,                       XF86XK_Music, spawn, {.v = mpdplay } },
 	{ AnyKey,                       XF86XK_Pictures, spawn, {.v = comix } },
+	{ AnyKey,                       XF86XK_AudioNext, spawn, {.v = audionext } },
+	{ AnyKey,                       XF86XK_AudioPrev, spawn, {.v = audioprev } },
 };
 
 /* button definitions */
@@ -137,8 +144,9 @@ static Button buttons[] = {
 	{ ClkWinTitle,          0,              Button1,        zoom,           {0} },
 	{ ClkWinTitle,          0,              Button3,        focusstack,     {.i = -1 } },
 	{ ClkWinTitle,          0,              Button3,        zoom,           {0} },
-	{ ClkStatusText,        0,              Button1,        spawn,          {.v = gmalcmd } },
-	{ ClkStatusText,        0,              Button3,        spawn,          {.v = gcalcmd } },
+	{ ClkStatusText,        0,              Button1,        zoom,           {0} },
+	{ ClkStatusText,        0,              Button3,        focusstack,     {.i = -1 } },
+	{ ClkStatusText,        0,              Button3,        zoom,           {0} },
 	{ ClkClientWin,         MODKEY,         Button1,        movemouse,      {0} },
 	{ ClkClientWin,         MODKEY,         Button2,        togglefloating, {0} },
 	{ ClkClientWin,         MODKEY,         Button3,        resizemouse,    {0} },
