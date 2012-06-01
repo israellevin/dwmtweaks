@@ -487,7 +487,6 @@ buttonpress(XEvent *e) {
                 break;
             }
         }
-        sprintf(stext, "%u", activetags);
 
 		if(-1 == activetags) {
 			click = ClkTagBar;
